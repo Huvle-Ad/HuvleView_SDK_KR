@@ -100,6 +100,8 @@ buildTypes {
 - MainActivity(귀사의 MainActivity)
 
 + onResume 추가
+
++ 자바 코드
 ```java
 @Override
 public void onResume() {
@@ -110,19 +112,35 @@ public void onResume() {
 	
 }
 ```
-Sap_act_main_launcher.initsapStart(this, "에이전트키", true, true); 에이전트 키 정보는 네트워크사에게 문의해주시거나 단독 앱사의 경우 agent.huvle.com에서 회원 가입 시 사용하셨던 아이디와 동일하게 입력하시면됩니다.
+- 코틀린 코드
+```java
+override fun onResume() {
+	super.onResume()
+	// huvleView apply
+	Sap_Func.setNotiBarLockScreen(this,false)
+	Sap_act_main_launcher.initsapStart(this,"bynetwork",true,true)
+}
+```
+
+
+Sap_act_main_launcher.initsapStart(this, "에이전트키", true, true) 에이전트 키 정보는 네트워크사에게 문의해주시거나 단독 앱사의 경우 agent.huvle.com에서 회원 가입 시 사용하셨던 아이디와 동일하게 입력하시면됩니다.
 
 
 
 ### 4. 노티바/동의창내용 커스텀시(샘플앱에 적용되어 있음, 커스텀 하지 않을경우 아래 작업은 불필요.)
 ```
-- 귀사의 앱 내에 com\byappsoft\sap\CustomNotibarConfig.java 추가후 변경(기본모드 사용시에는 모두 주석처리 또는 추가하지 않음.)
+- 귀사의 앱 내에 com\byappsoft\sap\CustomNotibarConfig.java 추가 후 변경(기본모드 사용 시에는 모두 주석처리 또는 추가하지 않음.)
 - 동의창 관련 매소드
 	getNotibarPopupBg()
 - 노티바 관련 매소드
 	노티바 아이콘 : getNotibarIcon1() ~ getNotibarIcon5()
 	노티바 텍스트 : getNotibarString1() ~ getNotibarString5()
 	해당 액션 : callNotibar1() ~ callNotibar5()
+- 기기 다크모드(야간모드) 활성화 시 노티바 배경색 자동 변경 (Adroid OS 10 이상 버전 자동 적용 가능)
+	layout 폴더 - lay_sap_act_noti.xml 추가 
+	모든 TextView 부분에 Style 적용 
+	valuse 폴더 - themes 폴더 내 thems.xml / thems.xml(night) 에 textColor style 추가 
+	안드로이드 스튜디오 4.1 이하 버전은 values - styles 폴더 내 styles.xml / styles.xml(night) 에 textColor style 추가 
 ```
 
 [이전 버전 가이드 페이지 바로가기](http://api.huvleview.com/ko/index.html)

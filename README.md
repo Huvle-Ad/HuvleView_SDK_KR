@@ -101,7 +101,7 @@ buildTypes {
 
 + onResume 추가
 
-+ 자바 코드
++ Java code
 ```java
 @Override
 public void onResume() {
@@ -112,7 +112,7 @@ public void onResume() {
 	
 }
 ```
-- 코틀린 코드
+- Kotlin code
 ```java
 override fun onResume() {
 	super.onResume()

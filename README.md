@@ -19,17 +19,7 @@ Huvle SDK의 연동 방식은 Gradle을 이용한 방법으로 샘플 예제를 
 
 ## Usages
 ### 1. Manifest
-- networkSecurityConfig 추가(Android 10(API 레벨 29) 이상을 타켓팅하는 경우 requestLegacyExternalStorage추가)
-```
 
-<application
-	.
-	.
-	android:requestLegacyExternalStorage="true"
-	.
-	.
-	
-```
 - 항상 귀사의 앱이 실행될 수 있도록 launchMode 및 clearTaskOnLaunch 추가
 ```
 <activity
@@ -45,7 +35,6 @@ HuvleView SDK 를 사용하기 위해서는 gradle에 SDK를 포함한 하위 �
 allprojects {
     repositories {
         google()
-        jcenter()
         maven {
             name "Huvle"
             url "https://sdk.huvle.com/repository/internal"

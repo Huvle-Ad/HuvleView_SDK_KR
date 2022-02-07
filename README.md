@@ -99,6 +99,7 @@ public void onResume() {
 	Sap_Func.setNotiBarLockScreen(this, false);
 	Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true);
 	
+	
 }
 ```
 - Kotlin code
@@ -108,11 +109,16 @@ override fun onResume() {
 	// huvleView apply
 	Sap_Func.setNotiBarLockScreen(this,false)
 	Sap_act_main_launcher.initsapStart(this,"bynetwork",true,true)
+
 }
 ```
+   
 
 
-Sap_act_main_launcher.initsapStart(this, "에이전트키", true, true) 에이전트 키 정보는 네트워크사에게 문의해주시거나 단독 앱사의 경우 agent.huvle.com에서 회원 가입 시 사용하셨던 아이디와 동일하게 입력하시면됩니다.
+- Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true) 에서   
+  **"bynetwork"** 값은 _http://agent.huvle.com/_ 에서 회원 가입시 등록하실 아이디와 동일하게 입력한 **에이전트** 키를 기입해주시면 됩니다.   
+  그 외 문의 사항은 사이트 내 제휴 문의를 이용해 주시기 바랍니다.
+
 
 
 

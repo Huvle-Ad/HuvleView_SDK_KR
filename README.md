@@ -45,6 +45,17 @@ allprojects {
 
 - build.gradle(app)
 ```
+android {
+    ...
+    defaultConfig {
+        .
+	.
+        multiDexEnabled true
+	.
+	.
+    }
+}
+
 
 dependencies {
 	.

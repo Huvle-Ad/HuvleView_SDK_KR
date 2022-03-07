@@ -8,7 +8,7 @@
 ##  허블뷰 설치 가이드
 ## Usage
 ### 1. HuvleSDK aar 다운로드
-- [HuvleViewSDK 5.2.0.aar](https://sdk.huvle.com/repository/internal/com/byappsoft/sap/HuvleSDK/5.2.0/HuvleSDK-5.2.0.aar)
+- [HuvleViewSDK 5.2.0.aar](https://sdk.huvle.com/repository/internal/com/byappsoft/sap/HuvleSDK/5.5.0/HuvleSDK-5.2.0.aar)
 
 ### 2. Hierachy 에 HuvleSDKObject 생성
 

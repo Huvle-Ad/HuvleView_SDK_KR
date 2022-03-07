@@ -3,7 +3,8 @@
 ## 허블뷰 (Huvle) SDK Install Guide
 
 Huvle SDK의 연동 방식은 Gradle을 이용한 방법으로 샘플 예제를 이용해 간단하게 연동이 가능합니다.
-또한 Flutter와 Unity 3D에서도 연동이 가능합니다. 현재 Huvle SDK 최신버전은 **5.2.0** 입니다.
+또한 Flutter와 Unity 3D에서도 연동이 가능합니다. 현재 Huvle SDK 최신버전은 **5.5.0** 입니다.
+Huvle SDK 는 **TargetSDK 30** 이상 적용을 권장드립니다.
 아래 가이드 문서 내용은 본 문서 적용가이드의 **"모든 허블뷰 샘플 프로젝트 다운로드"** 하시면 모든 내용을 보실 수 있습니다.
 
 
@@ -19,6 +20,15 @@ Huvle SDK의 연동 방식은 Gradle을 이용한 방법으로 샘플 예제를 
 
 ## Usages
 ### 1. Manifest
+
+- 구글광고아이디 퍼미션 추가
+```
+<manifest>
+...
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" /> 
+...
+</manifest>
+```
 
 - 항상 귀사의 앱이 실행될 수 있도록 launchMode 및 clearTaskOnLaunch 추가
 ```
@@ -46,9 +56,9 @@ allprojects {
 - build.gradle(app)
 ```
 android {
-    ...
+    
     defaultConfig {
-        .
+    .
 	.
         multiDexEnabled true
 	.
@@ -63,8 +73,8 @@ dependencies {
 	/**
 	* huvle sdk , play-service-ads 
 	*/
-	implementation 'com.google.android.gms:play-services-ads:20.4.0'
-	implementation 'com.byappsoft.sap:HuvleSDK:5.2.0' 
+	implementation 'com.google.android.gms:play-services-ads:20.5.0'
+	implementation 'com.byappsoft.sap:HuvleSDK:5.5.0' 
 	.
 	.
 }

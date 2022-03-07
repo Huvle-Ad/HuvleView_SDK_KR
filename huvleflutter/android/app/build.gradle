@@ -63,7 +63,7 @@ flutter {
 dependencies {
 
     // TODO - Huvle Library Start
-    implementation 'com.google.android.gms:play-services-ads:20.4.0'
-    implementation 'com.byappsoft.sap:HuvleSDK:5.2.0'
+    implementation 'com.google.android.gms:play-services-ads:20.5.0'
+    implementation 'com.byappsoft.sap:HuvleSDK:5.5.0'
     implementation 'com.android.support:multidex:1.0.3'
 }

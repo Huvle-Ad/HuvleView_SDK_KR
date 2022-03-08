@@ -40,9 +40,7 @@ android {
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
-        // TODO - Huvle Library Start
         multiDexEnabled true
-        // TODO - Huvle Library End
     }
 
     buildTypes {
@@ -66,4 +64,5 @@ dependencies {
     implementation 'com.google.android.gms:play-services-ads:20.5.0'
     implementation 'com.byappsoft.sap:HuvleSDK:5.5.0'
     implementation 'com.android.support:multidex:1.0.3'
+    
 }

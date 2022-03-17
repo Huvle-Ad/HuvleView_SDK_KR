@@ -1,14 +1,14 @@
 # HuvleView_SDK Unity3D install Guide
 
 ## 공통 기본 요건
-- Unity 2019.4.20f1 이상 사용
-- Google Play Service 17.2.1 이상
+- Unity 2020.3.25f1 이상 사용
+- Google Play Service 20.5.0 이상
 - Android Target API 30
 
 ##  허블뷰 설치 가이드
 ## Usage
 ### 1. HuvleSDK aar 다운로드
-- [HuvleViewSDK 5.2.0.aar](https://sdk.huvle.com/repository/internal/com/byappsoft/sap/HuvleSDK/5.5.0/HuvleSDK-5.2.0.aar)
+- [HuvleViewSDK 5.5.0.aar](https://sdk.huvle.com/repository/internal/com/byappsoft/sap/HuvleSDK/5.5.0/HuvleSDK-5.5.0.aar)
 
 ### 2. Hierachy 에 HuvleSDKObject 생성
 
@@ -21,7 +21,7 @@
 ### 3. Project 에 HuvleSDK 등록
 
 1. Project 패널의 Assets 항목 아래에 Plugins/Android 없을 경우 폴더 생성(이름 정확히, 대소문자 구분)
-2. 위에서 다운로드한 파일을 Assets/Plugins/Android 폴더에 드래그 & 드롭 하여 등록 (위에서 다운로드 받은HuvleSDK-5.2.0.aar)
+2. 위에서 다운로드한 파일을 Assets/Plugins/Android 폴더에 드래그 & 드롭 하여 등록 (위에서 다운로드 받은HuvleSDK-5.5.0.aar)
 
 ![img2](./img/img2.png)
 
@@ -90,7 +90,7 @@ dependencies {
 
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support:support-v4:28.0.0'
-    implementation 'com.google.android.gms:play-services-ads:17.2.1'
+    implementation 'com.google.android.gms:play-services-ads:20.5.0'
 
 **DEPS**}
 .
@@ -117,7 +117,7 @@ unityStreamingAssets=.unity3d**STREAMING_ASSETS**
 ### 10. 안내
 - 유니티에서 HuvleSDK연동 후 귀사의 앱을 실행했다가 종료(뒤로 가기 또는 최근 실행 앱 정리 시)하면 노티바가 재 시작됩니다. 참고 부탁드립니다.
 
-- Unity 2019.4.20f1 이후버전을 이용한 연동 방식이며, 이하 버전은 연동방식이 다를 수 있습니다. 귀사에서 연동 후 문제가 있으시면 연락바랍니다.
+- Unity 2020.3.25f1 이후버전을 이용한 연동 방식이며, 이하 버전은 연동방식이 다를 수 있습니다. 귀사에서 연동 후 문제가 있으시면 연락바랍니다.
 
 ## License
 Huvle SDK 의 저작권은 (주)허블에 있습니다.

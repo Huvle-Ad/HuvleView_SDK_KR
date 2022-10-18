@@ -8,7 +8,7 @@
 ##  허블뷰 설치 가이드
 ## Usage
 ### 1. HuvleSDK aar 다운로드
-- [HuvleViewSDK 5.5.0.aar](https://sdk.huvle.com/repository/internal/com/byappsoft/sap/HuvleSDK/5.5.4/HuvleSDK-5.5.4.aar)
+- [HuvleViewSDK 5.5.7.aar](https://sdk.huvle.com/repository/internal/com/byappsoft/sap/HuvleSDK/5.5.7/HuvleSDK-5.5.7.aar)
 
 ### 2. Hierachy 에 HuvleSDKObject 생성
 
@@ -21,7 +21,7 @@
 ### 3. Project 에 HuvleSDK 등록
 
 1. Project 패널의 Assets 항목 아래에 Plugins/Android 없을 경우 폴더 생성(이름 정확히, 대소문자 구분)
-2. 위에서 다운로드한 파일을 Assets/Plugins/Android 폴더에 드래그 & 드롭 하여 등록 (위에서 다운로드 받은HuvleSDK-5.5.4.aar)
+2. 위에서 다운로드한 파일을 Assets/Plugins/Android 폴더에 드래그 & 드롭 하여 등록 (위에서 다운로드 받은HuvleSDK-5.5.7.aar)
 
 ![img2](./img/img2.png)
 

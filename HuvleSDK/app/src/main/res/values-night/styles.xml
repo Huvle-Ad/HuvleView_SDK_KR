@@ -9,7 +9,7 @@
 
     <!-- Notibar darkmode text color custom -->
     <style name="HuvleStatusbar" parent="@android:style/TextAppearance">
-        <item name="android:textColor">#f4f4f4</item>
+        <item name="android:textColor">#ffffff</item>
 
     </style>
 

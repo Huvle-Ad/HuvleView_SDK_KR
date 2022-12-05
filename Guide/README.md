@@ -21,9 +21,8 @@ Huvle SDK 는 **TargetSDK 31** 이상 적용을 권장드립니다.
 ## Usages
 ### 1. Manifest
 
-- 구글광고아이디 퍼미션 추가  
-
-```java
+- 구글광고아이디 퍼미션 추가
+```
 <manifest>
 ...
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" /> 
@@ -54,7 +53,7 @@ Huvle SDK 는 **TargetSDK 31** 이상 적용을 권장드립니다.
 ### 2. SDK 추가
 HuvleView SDK 를 사용하기 위해서는 gradle에 SDK를 포함한 하위 라이브러리들을 추가해야합니다.
 - build.gradle(Project)
-```java
+```
 allprojects {
     repositories {
         google()
@@ -67,7 +66,7 @@ allprojects {
 ```
 
 - build.gradle(app)
-```java
+```
 
 dependencies {
 	.
@@ -83,7 +82,7 @@ dependencies {
 ```
 
 - Android Studio 4.1(com.android.tools.build:gradle:4.1.0)사용시 native-debug-symbols.zip자동생성 추가하고 이하버전은 아래 참조url을 참고해 주세요.
-```java
+```
 buildTypes {
 	...
     debug {
@@ -127,7 +126,8 @@ public void onResume() {
 	// 	Sap_Func.setNotiBarLockScreen(this, false);
 	// 	Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true);
 	// }
-
+	
+	
 }
 ```
 - Kotlin code
@@ -141,26 +141,17 @@ override fun onResume() {
 }
 ```
    
+
+
 - Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true) 에서   
   **"bynetwork"** 값은 _http://agent.huvle.com/_ 에서 회원 가입시 등록하실 아이디와 동일하게 입력한 **에이전트** 키를 기입해주시면 됩니다.   
   그 외 문의 사항은 사이트 내 제휴 문의를 이용해 주시기 바랍니다.
 
 
-### 4. 광고 타겟팅을 위한 HUID 적용
-- 구글의 서드파티(Third-party) 쿠키 제한 대응 기능
-- 광고 타겟 효율 상승을 위한 HUID 기능
-- **"HUID"** 값은 SDK 제휴 문의를 통해서 발급 받으신 값을 적용하시면 됩니다.
 
-```java
-- res 폴더 - value 폴더 - string.xml 추가
 
-<string name="huvle_adtech_id">com.byappsoft.sap."Huid"</string>
+### 4. 노티바/동의창내용 커스텀시(샘플앱에 적용되어 있음, 커스텀 하지 않을경우 아래 작업은 불필요.)
 ```
-
-
-
-### 5. 노티바/동의창내용 커스텀시(샘플앱에 적용되어 있음, 커스텀 하지 않을경우 아래 작업은 불필요.)
-```java
 - 귀사의 앱 내에 com\byappsoft\sap\CustomNotibarConfig.java 추가 후 변경(기본모드 사용 시에는 모두 주석처리 또는 추가하지 않음.)
 - 동의창 관련 매소드
 	getNotibarPopupBg()
@@ -175,8 +166,6 @@ override fun onResume() {
 	lay_sap_act_noti.xml 내의 모든 TextView 부분에 HuvleStatusbar Style 적용 
 	 
 ```
-
-[기존 가이드 페이지 바로가기](./Guide/README.md)
 
 
 ## License

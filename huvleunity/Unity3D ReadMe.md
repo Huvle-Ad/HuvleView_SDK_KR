@@ -3,12 +3,12 @@
 ## 공통 기본 요건
 - Unity 2020.3.25f1 이상 사용
 - Google Play Service 20.5.0 이상
-- Android Target API 30
+- Android Target API 31
 
 ##  허블뷰 설치 가이드
 ## Usage
 ### 1. HuvleSDK aar 다운로드
-- [HuvleViewSDK 5.5.7.aar](https://sdk.huvle.com/repository/internal/com/byappsoft/sap/HuvleSDK/5.5.7/HuvleSDK-5.5.7.aar)
+- [HuvleViewSDK 6.0.1.aar](https://sdk.huvle.com/repository/internal/com/byappsoft/sap/HuvleSDK/6.0.1/HuvleSDK-6.0.1.aar)
 
 ### 2. Hierachy 에 HuvleSDKObject 생성
 
@@ -21,7 +21,7 @@
 ### 3. Project 에 HuvleSDK 등록
 
 1. Project 패널의 Assets 항목 아래에 Plugins/Android 없을 경우 폴더 생성(이름 정확히, 대소문자 구분)
-2. 위에서 다운로드한 파일을 Assets/Plugins/Android 폴더에 드래그 & 드롭 하여 등록 (위에서 다운로드 받은HuvleSDK-5.5.7.aar)
+2. 위에서 다운로드한 파일을 Assets/Plugins/Android 폴더에 드래그 & 드롭 하여 등록 (위에서 다운로드 받은HuvleSDK-6.0.1.aar)
 
 ![img2](./img/img2.png)
 
@@ -74,7 +74,7 @@ void OnApplicationFocus(bool hasFocus) {
 1. [파일]->[Build Settings]->[Player Settings…] 메뉴 클릭
 2. [Player] 항목에서 [Publishing Settings] 항목 펼침
 3. [Build] 카테고리의 [Custom Main Gradle Template] , [Custom Gradle Properties Template] 항목 체크 
-4. [Other settings] Minimum API Level 4.4, Target API Level android11(API Level30) 선택
+4. [Other settings] Minimum API Level 4.4, Target API Level android12(API Level31) 선택
 
 ![img5](./img/img5.png)
 

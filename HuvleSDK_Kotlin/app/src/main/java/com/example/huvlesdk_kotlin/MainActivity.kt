@@ -30,11 +30,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        //-- Huid aplly
+        // TODO -- Huid
         HuidManager.onResume(this)
         Sap_act_main_launcher.onResume(this)
-        //-- huvleView apply
+        // TODO-- huvleView apply
         Sap_Func.setNotiBarLockScreen(this,false)
         Sap_act_main_launcher.initsapStart(this,"bynetwork",true,true)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // TODO -- Huid
+        HuidManager.onStop(this)
+        Sap_act_main_launcher.onStop(this)
     }
 }

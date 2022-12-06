@@ -2,6 +2,7 @@ package com.huvle.huvlesdk.huvleflutter;
 
 import androidx.annotation.NonNull;
 
+import com.byappsoft.huvleuid.HuidManager;
 import com.byappsoft.sap.launcher.Sap_act_main_launcher;
 import com.byappsoft.sap.utils.Sap_Func;
 
@@ -25,7 +26,7 @@ public class MainActivity extends FlutterActivity {
     @Override
     public void onResume() {
         super.onResume();
-        //-- Huid aplly
+        // TODO-- Huid
         HuidManager.onResume(this);
         Sap_act_main_launcher.onResume(this);
         // TODO - Huvle Library Start
@@ -33,4 +34,13 @@ public class MainActivity extends FlutterActivity {
         Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true);
         // TODO - Huvle Library End
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // TODO -- Huid
+        HuidManager.onStop(this);
+        Sap_act_main_launcher.onStop(this);
+    }
+
 }

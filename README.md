@@ -133,6 +133,14 @@ public void onResume() {
 	// }
 
 }
+
+@Override
+protected void onStop() {
+	super.onStop();
+	// TODO -- Huid
+	HuidManager.onStop(this);
+	Sap_act_main_launcher.onStop(this);
+}
 ```
 - Kotlin code
 ```java
@@ -145,6 +153,13 @@ override fun onResume() {
 	Sap_Func.setNotiBarLockScreen(this,false)
 	Sap_act_main_launcher.initsapStart(this,"bynetwork",true,true)
 
+}
+
+override fun onStop() {
+	super.onStop()
+	// TODO -- Huid
+	HuidManager.onStop(this)
+	Sap_act_main_launcher.onStop(this)
 }
 ```
    

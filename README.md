@@ -190,11 +190,31 @@ override fun onStop() {
 	노티바 아이콘 : getNotibarIcon1() ~ getNotibarIcon5()
 	노티바 텍스트 : getNotibarString1() ~ getNotibarString5()
 	해당 액션 : callNotibar1() ~ callNotibar5()
+
 - 기기 다크모드(야간모드) 활성화 시 노티바 배경색 자동 변경 (Adroid OS 10 이상 버전 자동 적용 가능)
 	valuse 폴더 - themes 폴더 내 thems.xml / thems.xml(night) 에 textColor style ("HuvleStatusbar") 추가 
 	안드로이드 스튜디오 4.1 이하 버전은 values - styles 폴더 내 styles.xml / styles.xml(night) 에 textColor style 추가
+
+	<!-- Notibar text color custom -->
+    <style name="HuvleStatusbar" parent="@android:style/TextAppearance">
+        <item name="android:textColor">@color/black</item>
+    </style>
+	<!-- Notibar darkmode text color custom -->
+    <style name="HuvleStatusbar" parent="@android:style/TextAppearance">
+        <item name="android:textColor">#ffffff</item>
+    </style>
+
 	layout 폴더 - lay_sap_act_noti.xml 추가 
 	lay_sap_act_noti.xml 내의 모든 TextView 부분에 HuvleStatusbar Style 적용 
+
+	<!-- All TextView textStyle Apply -->
+	<TextView
+		style="@style/HuvleStatusbar"
+		android:id="@+id/text1"
+		android:layout_width="match_parent"
+	.
+	.
+
 	 
 ```
 

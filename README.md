@@ -25,7 +25,7 @@ Huvle SDK 는 **TargetSDK 31** 이상 적용을 권장드립니다.
 ```
 <manifest>
 ...
-    <uses-permission android:name="com.google.android.gms.permission.AD_ID" /> 
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 ...
 </manifest>
 ```
@@ -36,7 +36,7 @@ Huvle SDK 는 **TargetSDK 31** 이상 적용을 권장드립니다.
 ```java
 <manifest>
 ...
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/> /
 ...
 </manifest>
 
@@ -148,9 +148,93 @@ override fun onResume() {
   그 외 문의 사항은 사이트 내 제휴 문의를 이용해 주시기 바랍니다.
 
 
+### 4. 허블뷰 동의창 후 다른 앱 위의 그리기 사용자 권한 요청하기 
+
+- 다른 앱 위의 그리기 권한 추가
+```
+<manifest>
+...
+	<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" /> 
+...
+</manifest>
+```
+
+- onCreate 
+```java
+protected void onCreate(Bundle savedInstanceState) {
+	super.onCreate(savedInstanceState);
+	setContentView(R.layout.activity_main);
+
+	if(!checkPermission()){
+		requestSapPermissions();
+	}
+
+}
+```
+
++ onResume 허블뷰 interface 사용
+```java
+public void onResume() {
+	Sap_Func.setNotiBarLockScreen(this, false);
+	Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true, new Sap_act_main_launcher.OnLauncher() {
+
+		@Override
+		public void onDialogOkClicked() { //허블뷰 동의창 확인 후 작업
+			checkDrawOverlayPermission();
+		}
+
+		@Override
+		public void onDialogCancelClicked() {} 
+
+		@Override
+		public void onInitSapStartapp() {}
+
+		@Override
+		public void onUnknown() {}
+	});
+}
+```
+
+```java
+public boolean checkDrawOverlayPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            return true;
+        }
+        if (!Settings.canDrawOverlays(this)) {
+            new AlertDialog.Builder(this)
+                    .setTitle("다른앱 위에 그리기")
+                    .setMessage("다른 앱 위에 그리기 권한을 허용해주세요.")
+                    .setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Intent intent = new Intent();
+                            intent.setAction(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                            Uri uri = Uri.parse("package:" + getPackageName());
+                            intent.setData(uri);
+                            startActivity(intent);
+
+                        }
+                    })
+                    .setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    })
+                    .create()
+                    .show();
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    
+```
 
 
-### 4. 노티바/동의창내용 커스텀시(샘플앱에 적용되어 있음, 커스텀 하지 않을경우 아래 작업은 불필요.)
+
+### 5. 노티바/동의창내용 커스텀시(샘플앱에 적용되어 있음, 커스텀 하지 않을경우 아래 작업은 불필요.)
 ```
 - 귀사의 앱 내에 com\byappsoft\sap\CustomNotibarConfig.java 추가 후 변경(기본모드 사용 시에는 모두 주석처리 또는 추가하지 않음.)
 - 동의창 관련 매소드

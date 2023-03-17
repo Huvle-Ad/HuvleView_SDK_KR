@@ -3,7 +3,7 @@
 ## 허블뷰 (Huvle) SDK Install Guide
 
 Huvle SDK의 연동 방식은 Gradle을 이용한 방법으로 샘플 예제를 이용해 간단하게 연동이 가능합니다.
-또한 Flutter와 Unity 3D에서도 연동이 가능합니다. 현재 Huvle SDK 최신버전은 **6.0.5** 입니다.
+또한 Flutter와 Unity 3D에서도 연동이 가능합니다. 
 Huvle SDK 는 **TargetSDK 31** 이상 적용을 권장드립니다.
 아래 가이드 문서 내용은 본 문서 적용가이드의 **"모든 허블뷰 샘플 프로젝트 다운로드"** 하시면 모든 내용을 보실 수 있습니다.
 
@@ -75,7 +75,8 @@ dependencies {
 	* huvle sdk , play-service-ads 
 	*/
 	implementation 'com.google.android.gms:play-services-ads:20.5.0'
-	implementation 'com.byappsoft.sap:HuvleSDK:6.0.5' 
+	implementation 'com.byappsoft.sap:HuvleSDK:$last_version'  
+	// version 에 대한 자세한 사항은 문의 주시길 바랍니다.
 	.
 	.
 }
@@ -110,76 +111,15 @@ buildTypes {
 ### 3. 앱에 적용하기
 - MainActivity(귀사의 MainActivity)
 
-+ onResume 추가
-
-+ Java code
-```java
-@Override
-public void onResume() {
-	super.onResume();
-	// huvleView apply
-	Sap_Func.setNotiBarLockScreen(this, false);
-	Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true);
-
-	// APP target 33 이상일 경우 POST_NOTIFICATION 권한 처리 후 적용
-	// if(Post_notification){
-	// 	Sap_Func.setNotiBarLockScreen(this, false);
-	// 	Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true);
-	// }
-	
-	
-}
-```
-- Kotlin code
-```java
-override fun onResume() {
-	super.onResume()
-	// huvleView apply
-	Sap_Func.setNotiBarLockScreen(this,false)
-	Sap_act_main_launcher.initsapStart(this,"bynetwork",true,true)
-
-}
-```
-   
-
-
-- Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true) 에서   
-  **"bynetwork"** 값은 _http://agent.huvle.com/_ 에서 회원 가입시 등록하실 아이디와 동일하게 입력한 **에이전트** 키를 기입해주시면 됩니다.   
-  그 외 문의 사항은 사이트 내 제휴 문의를 이용해 주시기 바랍니다.
-
-
-### 4. 허블뷰 동의창 후 다른 앱 위의 그리기 사용자 권한 요청하기 
-
-- 다른 앱 위의 그리기 권한 추가
-```
-<manifest>
-...
-	<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" /> 
-...
-</manifest>
-```
-
-- onCreate 
-```java
-protected void onCreate(Bundle savedInstanceState) {
-	super.onCreate(savedInstanceState);
-	setContentView(R.layout.activity_main);
-
-	if(!checkPermission()){
-		requestSapPermissions();
-	}
-
-}
-```
-
-+ onResume 허블뷰 interface 사용
++ onResume 
+- java code
 ```java
 public void onResume() {
 	Sap_Func.setNotiBarLockScreen(this, false);
 	Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true, new Sap_act_main_launcher.OnLauncher() {
 
 		@Override
-		public void onDialogOkClicked() { //허블뷰 동의창 확인 후 작업
+		public void onDialogOkClicked() { 
 			checkDrawOverlayPermission();
 		}
 
@@ -192,6 +132,15 @@ public void onResume() {
 		@Override
 		public void onUnknown() {}
 	});
+
+
+	// APP target 33 이상일 경우 POST_NOTIFICATION 권한 처리 후 적용
+	// if(Post_notification){
+	// 	Sap_Func.setNotiBarLockScreen(this, false);
+	// 	Sap_act_main_launcher.initsapStart(
+    //  this, "bynetwork", true, true, new Sap_act_main_launcher.OnLauncher() {...});
+	// }
+	
 }
 ```
 
@@ -232,9 +181,66 @@ public boolean checkDrawOverlayPermission() {
     
 ```
 
+- Kotlin code
+```java
+override fun onResume() {
+        super.onResume()
+        // TODO-- huvleView apply
+        Sap_Func.setNotiBarLockScreen(this,false)
+        Sap_act_main_launcher.initsapStart(this,"bynetwork",true,true,
+            object : Sap_act_main_launcher.OnLauncher {
+                override fun onDialogOkClicked() {
+                    checkDrawOverlayPermission()
+                }
+
+                override fun onDialogCancelClicked() {
+                }
+
+                override fun onInitSapStartapp() {
+                }
+
+                override fun onUnknown() {
+                }
+
+            })
+    }
+
+private	fun checkDrawOverlayPermission(): Boolean {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+			return true
+		}
+		return if (!Settings.canDrawOverlays(this)) {
+			AlertDialog.Builder(this)
+				.setTitle("다른앱 위에 그리기")
+				.setMessage("다른 앱 위에 그리기 권한을 허용해주세요.")
+				.setPositiveButton("확인") { dialog, which ->
+					val intent = Intent()
+					intent.action = Settings.ACTION_MANAGE_OVERLAY_PERMISSION
+					val uri = Uri.parse("package:$packageName")
+					intent.data = uri
+					startActivity(intent)
+				}
+				.setNegativeButton(
+					"취소"
+				) { dialog, which -> dialog.cancel() }
+				.create()
+				.show()
+			false
+		} else {
+			true
+		}
+	}
+```
 
 
-### 5. 노티바/동의창내용 커스텀시(샘플앱에 적용되어 있음, 커스텀 하지 않을경우 아래 작업은 불필요.)
+- Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true) 에서   
+  **"bynetwork"** 값은 _http://agent.huvle.com/_ 에서 회원 가입시 등록하실 아이디와 동일하게 입력한 **에이전트** 키를 기입해주시면 됩니다.   
+  그 외 문의 사항은 사이트 내 제휴 문의를 이용해 주시기 바랍니다.
+
+
+
+
+### 4. 노티바/동의창내용 커스텀시(샘플앱에 적용되어 있음, 커스텀 하지 않을경우 아래 작업은 불필요.)
 ```
 - 귀사의 앱 내에 com\byappsoft\sap\CustomNotibarConfig.java 추가 후 변경(기본모드 사용 시에는 모두 주석처리 또는 추가하지 않음.)
 - 동의창 관련 매소드

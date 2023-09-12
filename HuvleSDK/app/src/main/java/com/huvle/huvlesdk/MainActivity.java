@@ -1,14 +1,17 @@
 package com.huvle.huvlesdk;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
 import android.widget.TextView;
+
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -23,6 +26,12 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView( R.layout.activity_main );
 
+        // 안드로이드 13 이상 알림권한 확인
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if(!checkPermission()){
+                requestSapPermissions();
+            }
+        }
 
         //-- Notification On Event.
         findViewById(R.id.noti_on_btn).setOnClickListener(new View.OnClickListener() {
@@ -48,23 +57,51 @@ public class MainActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
         // TODO -- HuvleView apply
-        Sap_Func.setNotiBarLockScreen(this, false);
-        Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true, new Sap_act_main_launcher.OnLauncher() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkPermission()) {
+                Sap_Func.setNotiBarLockScreen(this, false);
+                Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true, new Sap_act_main_launcher.OnLauncher() {
 
-            @Override
-            public void onDialogOkClicked() { //허블뷰 동의창 확인 후 작업
-                checkDrawOverlayPermission();
+                    @Override
+                    public void onDialogOkClicked() { //허블뷰 동의창 확인 후 작업
+                        checkDrawOverlayPermission();
+                    }
+
+                    @Override
+                    public void onDialogCancelClicked() {
+                    }
+
+                    @Override
+                    public void onInitSapStartapp() {
+                    }
+
+                    @Override
+                    public void onUnknown() {
+                    }
+                });
             }
+        } else {
+            Sap_Func.setNotiBarLockScreen(this, false);
+            Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true, new Sap_act_main_launcher.OnLauncher() {
 
-            @Override
-            public void onDialogCancelClicked() {}
+                @Override
+                public void onDialogOkClicked() { //허블뷰 동의창 확인 후 작업
+                    checkDrawOverlayPermission();
+                }
 
-            @Override
-            public void onInitSapStartapp() {}
+                @Override
+                public void onDialogCancelClicked() {
+                }
 
-            @Override
-            public void onUnknown() {}
-        });
+                @Override
+                public void onInitSapStartapp() {
+                }
+
+                @Override
+                public void onUnknown() {
+                }
+            });
+        }
     }
 
 
@@ -98,6 +135,22 @@ public class MainActivity extends AppCompatActivity {
             return false;
         } else {
             return true;
+        }
+    }
+
+
+    private boolean checkPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+        }
+        return true;
+    }
+
+    private void requestSapPermissions() {
+        try{
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 0);
+        }catch (Exception ignored){
         }
     }
 

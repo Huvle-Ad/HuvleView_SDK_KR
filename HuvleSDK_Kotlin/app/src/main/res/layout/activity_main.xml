@@ -32,4 +32,5 @@
         android:layout_marginTop="10dp"
         android:layout_below="@id/noti_on_btn" />
 
+
 </RelativeLayout>

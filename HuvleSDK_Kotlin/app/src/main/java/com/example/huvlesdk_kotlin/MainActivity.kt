@@ -21,8 +21,6 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         // 안드로이드 13 이상 알림권한 확인
-
-        // 안드로이드 13 이상 알림권한 확인
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (!checkPermission()) {
                 requestSapPermissions()

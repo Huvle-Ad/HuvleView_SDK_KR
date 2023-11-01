@@ -74,7 +74,7 @@ dependencies {
 	/**
 	* huvle sdk , play-service-ads 
 	*/
-	implementation 'com.google.android.gms:play-services-ads:20.5.0'
+	implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
 	implementation 'com.byappsoft.sap:HuvleSDK:$last_version'  
 	// version 에 대한 자세한 사항은 문의 주시길 바랍니다.
 	.

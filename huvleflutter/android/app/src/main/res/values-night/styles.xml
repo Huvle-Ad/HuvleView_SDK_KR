@@ -15,4 +15,8 @@
     <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
         <item name="android:windowBackground">?android:colorBackground</item>
     </style>
+
+    <style name="HuvleStatusbar" parent="@android:style/TextAppearance">
+        <item name="android:textColor">#ffffff</item>
+    </style>
 </resources>

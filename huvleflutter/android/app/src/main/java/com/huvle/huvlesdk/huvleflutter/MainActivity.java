@@ -43,51 +43,36 @@ public class MainActivity extends FlutterActivity {
         // TODO - Huvle Library Start
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (checkPermission()) {
-                Sap_Func.setNotiBarLockScreen(this, false);
-                Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true, new Sap_act_main_launcher.OnLauncher() {
-
-                    @Override
-                    public void onDialogOkClicked() { //허블뷰 동의창 확인 후 작업
-                        checkDrawOverlayPermission();
-                    }
-
-                    @Override
-                    public void onDialogCancelClicked() {
-                    }
-
-                    @Override
-                    public void onInitSapStartapp() {
-                    }
-
-                    @Override
-                    public void onUnknown() {
-                    }
-                });
+                huvleView();
             }
         } else {
-            Sap_Func.setNotiBarLockScreen(this, false);
-            Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true, new Sap_act_main_launcher.OnLauncher() {
-
-                @Override
-                public void onDialogOkClicked() { //허블뷰 동의창 확인 후 작업
-                    checkDrawOverlayPermission();
-                }
-
-                @Override
-                public void onDialogCancelClicked() {
-                }
-
-                @Override
-                public void onInitSapStartapp() {
-                }
-
-                @Override
-                public void onUnknown() {
-                }
-            });
+            huvleView();
         }
 
         // TODO - Huvle Library End
+    }
+
+    public void huvleView() {
+        Sap_Func.setNotiBarLockScreen(this, false);
+        Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true, new Sap_act_main_launcher.OnLauncher() {
+
+            @Override
+            public void onDialogOkClicked() { //허블뷰 동의창 확인 후 작업
+                checkDrawOverlayPermission();
+            }
+
+            @Override
+            public void onDialogCancelClicked() {
+            }
+
+            @Override
+            public void onInitSapStartapp() {
+            }
+
+            @Override
+            public void onUnknown() {
+            }
+        });
     }
 
     public boolean checkDrawOverlayPermission() {

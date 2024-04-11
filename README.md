@@ -4,7 +4,7 @@
 
 Huvle SDK의 연동 방식은 Gradle을 이용한 방법으로 샘플 예제를 이용해 간단하게 연동이 가능합니다.
 또한 Flutter와 Unity 3D에서도 연동이 가능합니다. 
-Huvle SDK 는 **TargetSDK 33** 이상 적용을 권장드립니다.
+Huvle SDK 는 **TargetSDK 34** 이상 적용을 권장드립니다.
 아래 가이드 문서 내용은 본 문서 적용가이드의 **"모든 허블뷰 샘플 프로젝트 다운로드"** 하시면 모든 내용을 보실 수 있습니다.
 
 
@@ -29,6 +29,7 @@ Huvle SDK 는 **TargetSDK 33** 이상 적용을 권장드립니다.
 ...
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
 ...
 </manifest>
 ```
@@ -106,57 +107,73 @@ buildTypes {
 + onResume 
 - java code
 ```java
+protected void onCreate(Bundle savedInstanceState) {
+    ...
+    // 안드로이드 13 이상 알림권한 확인
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if(!checkPermission()){
+            requestSapPermissions();
+        }
+    }
+    ....
+
+}
+
+
 public void onResume() {
-	if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (checkPermission()) {
-                Sap_Func.setNotiBarLockScreen(this, false);
-                Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true, new Sap_act_main_launcher.OnLauncher() {
 
-                    @Override
-                    public void onDialogOkClicked() { 
-                        checkDrawOverlayPermission();
-                    }
-
-                    @Override
-                    public void onDialogCancelClicked() {
-                    }
-
-                    @Override
-                    public void onInitSapStartapp() {
-                    }
-
-                    @Override
-                    public void onUnknown() {
-                    }
-                });
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkPermission()) { // 안드로이드 13 이상 POST_NOTIFICATION 권한 확인 필수
+               huvleView();
             }
         } else {
-            Sap_Func.setNotiBarLockScreen(this, false);
-            Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true, new Sap_act_main_launcher.OnLauncher() {
-
-                @Override
-                public void onDialogOkClicked() { 
-                    checkDrawOverlayPermission();
-                }
-
-                @Override
-                public void onDialogCancelClicked() {
-                }
-
-                @Override
-                public void onInitSapStartapp() {
-                }
-
-                @Override
-                public void onUnknown() {
-                }
-            });
+            huvleView();
         }
-	
 }
+
+
+public void huvleView() {
+    Sap_Func.setNotiBarLockScreen(this, false);
+    Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true, new Sap_act_main_launcher.OnLauncher() {
+
+        @Override
+        public void onDialogOkClicked() { 
+            checkDrawOverlayPermission();
+        }
+
+        @Override
+        public void onDialogCancelClicked() {
+        }
+
+        @Override
+        public void onInitSapStartapp() {
+        }
+
+        @Override
+        public void onUnknown() {
+        }
+    });
+}
+
 ```
 
 ```java
+private boolean checkPermission() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        return checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+    }
+    return true;
+}
+
+private void requestSapPermissions() {
+    try{
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 0);
+    }catch (Exception ignored){
+    }
+}
+
+
 public boolean checkDrawOverlayPermission() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             return true;
@@ -195,47 +212,64 @@ public boolean checkDrawOverlayPermission() {
 
 - Kotlin code
 ```java
+override fun onCreate(savedInstanceState: Bundle?) {
+    ...
+    // 안드로이드 13 이상 알림권한 확인
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (!checkPermission()) {
+            requestSapPermissions()
+        }
+    }   
+    ...
+}
+
+
 override fun onResume() {
         super.onResume()
         // TODO-- huvleView apply
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Sap_Func.setNotiBarLockScreen(this,false)
-            Sap_act_main_launcher.initsapStart(this,"bynetwork",true,true,
-                object : Sap_act_main_launcher.OnLauncher {
-                    override fun onDialogOkClicked() {
-                        checkDrawOverlayPermission()
-                    }
-
-                    override fun onDialogCancelClicked() {
-                    }
-
-                    override fun onInitSapStartapp() {
-                    }
-
-                    override fun onUnknown() {
-                    }
-
-                })
+            huvleView()
         } else {
-            Sap_Func.setNotiBarLockScreen(this,false)
-            Sap_act_main_launcher.initsapStart(this,"bynetwork",true,true,
-                object : Sap_act_main_launcher.OnLauncher {
-                    override fun onDialogOkClicked() {
-                        checkDrawOverlayPermission()
-                    }
-
-                    override fun onDialogCancelClicked() {
-                    }
-
-                    override fun onInitSapStartapp() {
-                    }
-
-                    override fun onUnknown() {
-                    }
-
-                })
+            huvleView()
         }
     }
+
+private fun huvleView() {
+    Sap_Func.setNotiBarLockScreen(this,false)
+    Sap_act_main_launcher.initsapStart(this,"bynetwork",true,true,
+        object : Sap_act_main_launcher.OnLauncher {
+            override fun onDialogOkClicked() {
+                checkDrawOverlayPermission()
+            }
+
+            override fun onDialogCancelClicked() {
+            }
+
+            override fun onInitSapStartapp() {
+            }
+
+            override fun onUnknown() {
+            }
+
+        })
+}
+
+private fun checkPermission(): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+    } else true
+}
+
+private fun requestSapPermissions() {
+    try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) requestPermissions(
+            arrayOf(
+                Manifest.permission.POST_NOTIFICATIONS
+            ), 0
+        )
+    } catch (ignored: Exception) {
+    }
+}
 
 private	fun checkDrawOverlayPermission(): Boolean {
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {

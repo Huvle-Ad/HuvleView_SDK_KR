@@ -46,43 +46,33 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         // TODO-- huvleView apply
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Sap_Func.setNotiBarLockScreen(this,false)
-            Sap_act_main_launcher.initsapStart(this,"bynetwork",true,true,
-                object : Sap_act_main_launcher.OnLauncher {
-                    override fun onDialogOkClicked() {
-                        checkDrawOverlayPermission()
-                    }
-
-                    override fun onDialogCancelClicked() {
-                    }
-
-                    override fun onInitSapStartapp() {
-                    }
-
-                    override fun onUnknown() {
-                    }
-
-                })
+            if (checkPermission()) {
+                huvleView()
+            }
         } else {
-            Sap_Func.setNotiBarLockScreen(this,false)
-            Sap_act_main_launcher.initsapStart(this,"bynetwork",true,true,
-                object : Sap_act_main_launcher.OnLauncher {
-                    override fun onDialogOkClicked() {
-                        checkDrawOverlayPermission()
-                    }
-
-                    override fun onDialogCancelClicked() {
-                    }
-
-                    override fun onInitSapStartapp() {
-                    }
-
-                    override fun onUnknown() {
-                    }
-
-                })
+            huvleView()
         }
 
+    }
+
+    private fun huvleView() {
+        Sap_Func.setNotiBarLockScreen(this,false)
+        Sap_act_main_launcher.initsapStart(this,"bynetwork",true,true,
+            object : Sap_act_main_launcher.OnLauncher {
+                override fun onDialogOkClicked() {
+                    checkDrawOverlayPermission()
+                }
+
+                override fun onDialogCancelClicked() {
+                }
+
+                override fun onInitSapStartapp() {
+                }
+
+                override fun onUnknown() {
+                }
+
+            })
     }
 
     private fun checkDrawOverlayPermission(): Boolean {

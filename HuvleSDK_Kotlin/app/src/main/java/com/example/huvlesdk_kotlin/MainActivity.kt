@@ -1,7 +1,9 @@
 package com.example.huvlesdk_kotlin
 
 import android.Manifest
+import android.app.AlarmManager
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -24,6 +26,10 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (!checkPermission()) {
                 requestSapPermissions()
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    checkExactAlarm()
+                }
             }
         }
 
@@ -47,6 +53,9 @@ class MainActivity : AppCompatActivity() {
         // TODO-- huvleView apply
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (checkPermission()) {
+                if (Build.VERSION.SDK_INT >= 34) {
+                    Sap_Func.setServiceState(this,true)
+                }
                 huvleView()
             }
         } else {
@@ -73,6 +82,46 @@ class MainActivity : AppCompatActivity() {
                 }
 
             })
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 0) {
+            if (checkPermission()) {
+                // Post notification 권한이 허용된 경우를 확인합니다.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    checkExactAlarm()
+                }
+            }
+        }
+    }
+
+    private fun checkExactAlarm(): Boolean {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
+            return true
+        }
+
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val canScheduleExactAlarms = alarmManager.canScheduleExactAlarms()
+
+        if (!canScheduleExactAlarms) {
+            AlertDialog.Builder(this)
+                .setTitle("알림 및 리마인더 허용")
+                .setMessage("알림 및 리마인더 권한을 허용해주세요.")
+                .setPositiveButton("확인") { _, _ ->
+                    val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                    intent.data = Uri.parse("package:$packageName")
+                    startActivity(intent)
+                }
+                .setNegativeButton("취소") { dialog, _ ->
+                    dialog.cancel()
+                }
+                .create()
+                .show()
+            return false
+        } else {
+            return true
+        }
     }
 
     private fun checkDrawOverlayPermission(): Boolean {

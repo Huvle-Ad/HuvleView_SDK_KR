@@ -1,7 +1,9 @@
 package com.huvle.huvlesdk;
 
 import android.Manifest;
+import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -30,6 +32,10 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if(!checkPermission()){
                 requestSapPermissions();
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    checkExactAlarm();
+                }
             }
         }
 
@@ -59,6 +65,9 @@ public class MainActivity extends AppCompatActivity {
         // TODO -- HuvleView apply
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (checkPermission()) {
+                if (Build.VERSION.SDK_INT >= 34) {
+                    Sap_Func.setServiceState(this,true);
+                }
                 huvleView();
             }
         } else {
@@ -87,6 +96,40 @@ public class MainActivity extends AppCompatActivity {
             public void onUnknown() {
             }
         });
+    }
+
+    public boolean checkExactAlarm() {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
+            return true;
+        }
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        boolean canScheduleExactAlarms = alarmManager.canScheduleExactAlarms();
+
+        if (!canScheduleExactAlarms) {
+            new AlertDialog.Builder(this)
+                    .setTitle("알림 및 리마인더 허용")
+                    .setMessage("알림 및 리마인더 권한을 허용해주세요.")
+                    .setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                            intent.setData(Uri.parse("package:" + getPackageName()));
+                            startActivity(intent);
+                        }
+                    })
+                    .setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    })
+                    .create()
+                    .show();
+            return false;
+        } else {
+            return true;
+        }
     }
 
     public boolean checkDrawOverlayPermission() {
@@ -122,7 +165,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 0) {
+            if (checkPermission()) {
+                // Post notification 권한이 허용된 경우를 확인합니다.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    checkExactAlarm();
+                }
+            }
+        }
+    }
     private boolean checkPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             return checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;

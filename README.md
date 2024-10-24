@@ -39,7 +39,7 @@ Huvle SDK 는 **TargetSDK 34** 이상 적용을 권장드립니다.
 ```
 <manifest>
 '''
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />-->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
 
     <service

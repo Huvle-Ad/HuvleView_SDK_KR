@@ -63,6 +63,28 @@ Huvle SDK 는 **TargetSDK 34** 이상 적용을 권장드립니다.
 	android:clearTaskOnLaunch="true">
 ```
 
+- 권장 네트워크 보안 설정 (http 접속 방지)
+```
+// 1번 혹은 2번 형태로 적용 가능
+1. res/xml 에 networkSecurityConfig 파일 구성 후 AndroidManifest.xml application 속성에 
+android:networkSecurityConfig="@xml/network_security_config" 설정
+
+    <?xml version="1.0" encoding="utf-8"?>
+    <network-security-config>
+        <base-config cleartextTrafficPermitted="false" />
+    </network-security-config>
+
+    <application
+        .
+        .
+        android:networkSecurityConfig="@xml/network_security_config">
+
+2. AndroidManifest.xml application 속성에 "false" 직접 설정.
+    <application android:useCleartextTraffic="false">
+
+```
+
+
 ### 2. SDK 추가
 HuvleView SDK 를 사용하기 위해서는 gradle에 SDK를 포함한 하위 라이브러리들을 추가해야합니다.
 - build.gradle(Project)
@@ -426,6 +448,24 @@ private	fun checkDrawOverlayPermission(): Boolean {
 			true
 		}
 	}
+```
+
+- 인앱 버튼 적용 (노티바 미사용)
+```java
+public void huvleView() {
+    Sap_Func.setNotiBarLockScreen(this, false);
+    Sap_act_main_launcher.initsapStart(this, "bynetwork", false, true) //notibar "false" 설정
+}
+
+findViewById(R.id.test_btn).setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+        String url = "https://www.huvle.com/global_set.asp";
+        Intent intent = new Intent(MainActivity.this, Sap_MainActivity.class);
+        intent.putExtra(Sap_BrowserActivity.PARAM_OPEN_URL, url);
+        startActivity(intent);
+    }
+});
 ```
 
 

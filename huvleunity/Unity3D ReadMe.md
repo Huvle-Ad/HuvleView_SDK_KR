@@ -3,7 +3,7 @@
 ## 공통 기본 요건
 - Unity 2020.3.25f1 이상 사용
 - Google Play Service 20.5.0 이상
-- Android Target API 33
+- Android Target API 35
 
 ##  허블뷰 설치 가이드
 ## Usage
@@ -74,7 +74,7 @@ void OnApplicationFocus(bool hasFocus) {
 1. [파일]->[Build Settings]->[Player Settings…] 메뉴 클릭
 2. [Player] 항목에서 [Publishing Settings] 항목 펼침
 3. [Build] 카테고리의 [Custom Main Gradle Template] , [Custom Gradle Properties Template] 항목 체크 
-4. [Other settings] Minimum API Level 23, Target API Level android12(API Level 33) 선택
+4. [Other settings] Minimum API Level 23, Target API Level android15(API Level 35) 선택
 
 ![img5](./img/img5.png)
 

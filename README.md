@@ -4,7 +4,7 @@
 
 Huvle SDK의 연동 방식은 Gradle을 이용한 방법으로 샘플 예제를 이용해 간단하게 연동이 가능합니다.
 또한 Flutter와 Unity 3D에서도 연동이 가능합니다. 
-Huvle SDK 는 **TargetSDK 34** 이상 적용을 권장드립니다.
+Huvle SDK 는 **최신 버전**  적용을 권장드립니다.
 아래 가이드 문서 내용은 본 문서 적용가이드의 **"모든 허블뷰 샘플 프로젝트 다운로드"** 하시면 모든 내용을 보실 수 있습니다.
 
 
@@ -63,24 +63,27 @@ Huvle SDK 는 **TargetSDK 34** 이상 적용을 권장드립니다.
 	android:clearTaskOnLaunch="true">
 ```
 
-- 권장 네트워크 보안 설정 (http 접속 방지)
+- 권장 네트워크 보안 설정 (http 접속 허용)  
+Android 9 (API 28)부터 강화된 네트워크 보안정책으로 인해 application에 cleartext를 삽입합니다.  
+광고 이미지 Url Load, 트래킹요소, Resource가 HTTP 구성될 수 있으므로 해당옵션을 삽입합니다.
+
 ```
-// 1번 혹은 2번 형태로 적용 가능
-1. res/xml 에 networkSecurityConfig 파일 구성 후 AndroidManifest.xml application 속성에 
+
+- res/xml 에 networkSecurityConfig 파일 구성 후 AndroidManifest.xml application 속성에 
 android:networkSecurityConfig="@xml/network_security_config" 설정
 
     <?xml version="1.0" encoding="utf-8"?>
     <network-security-config>
-        <base-config cleartextTrafficPermitted="false" />
+        <base-config cleartextTrafficPermitted="true" />
     </network-security-config>
 
     <application
         .
         .
-        android:networkSecurityConfig="@xml/network_security_config">
+        android:networkSecurityConfig="@xml/network_security_config"
+        tools:replace="android:networkSecurityConfig">
 
-2. AndroidManifest.xml application 속성에 "false" 직접 설정.
-    <application android:useCleartextTraffic="false">
+
 
 ```
 
@@ -112,6 +115,7 @@ dependencies {
 	implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
 	implementation 'com.byappsoft.sap:HuvleSDK:$last_version'  
 	// version 에 대한 자세한 사항은 문의 주시길 바랍니다.
+    implementation 'androidx.activity:activity:1.8.0' 
 	.
 	.
 }
@@ -155,12 +159,7 @@ protected void onCreate(Bundle savedInstanceState) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         if(!checkPermission()){
             requestSapPermissions();
-        } else {
-            // 안드로이드 14 이상 알림 및 리마인드 권한 획득
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                checkExactAlarm();
-            }
-        }
+        } 
     }
     ....
 
@@ -168,16 +167,10 @@ protected void onCreate(Bundle savedInstanceState) {
 
 public void onResume() {
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (checkPermission()) { // 안드로이드 13 이상 POST_NOTIFICATION 권한 확인 필수
-                if (Build.VERSION.SDK_INT >= 34) {
-                    Sap_Func.setServiceState(this,true); 
-                }
-               huvleView();
-            }
-        } else {
-            huvleView();
-        }
+    if (Build.VERSION.SDK_INT >= 34) { // Android 14 (UPSIDE_DOWN_CAKE) 이상
+        Sap_Func.setServiceState(this, true);
+    }
+    huvleView();
 }
 
 
@@ -207,110 +200,61 @@ public void huvleView() {
 ```
 
 ```java
-private boolean checkPermission() {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        return checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+public boolean checkDrawOverlayPermission() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+        return true;
     }
-    return true;
-}
-
-private void requestSapPermissions() {
-    try{
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 0);
-    }catch (Exception ignored){
-    }
-}
-
-public boolean checkExactAlarm() {
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
-            return true;
-        }
-
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        boolean canScheduleExactAlarms = alarmManager.canScheduleExactAlarms();
-
-        if (!canScheduleExactAlarms) {
-            new AlertDialog.Builder(this)
-                    .setTitle("알림 및 리마인더 허용")
-                    .setMessage("알림 및 리마인더 권한을 허용해주세요.")
-                    .setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
-                            intent.setData(Uri.parse("package:" + getPackageName()));
-                            startActivity(intent);
-                        }
-                    })
-                    .setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.cancel();
-                        }
-                    })
-                    .create()
-                    .show();
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-@Override
-protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    super.onActivityResult(requestCode, resultCode, data);
-    if (requestCode == 0) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            checkExactAlarm();
-        }
+    if (!Settings.canDrawOverlays(this)) {
+        new AlertDialog.Builder(this)
+                .setTitle("다른앱 위에 그리기")
+                .setMessage("다른 앱 위에 그리기 권한을 허용해주세요.")
+                .setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Intent intent = new Intent();
+                        intent.setAction(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                        Uri uri = Uri.parse("package:" + getPackageName());
+                        intent.setData(uri);
+                        startActivity(intent);
+                    }
+                })
+                .setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                })
+                .create()
+                .show();
+        return false;
+    } else {
+        return true;
     }
 }
 
 @Override
 public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-    if (requestCode == 0) {
-        if (checkPermission()) {
-            // Post notification 권한이 허용된 경우를 확인합니다.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                checkExactAlarm();
-            }
-        }
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    if (requestCode == 0) { 
+        checkPermission();
     }
 }
 
-
-public boolean checkDrawOverlayPermission() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return true;
-        }
-        if (!Settings.canDrawOverlays(this)) {
-            new AlertDialog.Builder(this)
-                    .setTitle("다른앱 위에 그리기")
-                    .setMessage("다른 앱 위에 그리기 권한을 허용해주세요.")
-                    .setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Intent intent = new Intent();
-                            intent.setAction(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-                            Uri uri = Uri.parse("package:" + getPackageName());
-                            intent.setData(uri);
-                            startActivity(intent);
-
-                        }
-                    })
-                    .setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.cancel();
-                        }
-                    })
-                    .create()
-                    .show();
-            return false;
-        } else {
-            return true;
-        }
+private boolean checkPermission() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        return checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
     }
+    return true;
+}
+
+private void requestSapPermissions() {
+    try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 0); 
+        }
+    } catch (Exception ignored) {
+    }
+}
 
     
 ```
@@ -319,16 +263,12 @@ public boolean checkDrawOverlayPermission() {
 ```java
 override fun onCreate(savedInstanceState: Bundle?) {
     ...
-    // 안드로이드 13 이상 알림권한 확인
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        if (!checkPermission()) {
-            requestSapPermissions()
-        } else { //안드로이드 14 이상 알림 및 리마인드 권한 확인
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                checkExactAlarm()
+    // 안드로이드 13 (TIRAMISU) 이상 알림 권한 확인
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (!checkPostNotificationPermission()) {
+                requestPostNotificationPermission()
             }
         }
-    }   
     ...
 }
 
@@ -336,14 +276,10 @@ override fun onCreate(savedInstanceState: Bundle?) {
 override fun onResume() {
         super.onResume()
         // TODO-- huvleView apply
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (Build.VERSION.SDK_INT >= 34) {
-                Sap_Func.setServiceState(this,true)
-            }
-            huvleView()
-        } else {
-            huvleView()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            Sap_Func.setServiceState(this, true)
         }
+        huvleView()
     }
 
 private fun huvleView() {
@@ -366,88 +302,68 @@ private fun huvleView() {
         })
 }
 
-override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+override fun onRequestPermissionsResult(
+    requestCode: Int,
+    permissions: Array<out String>,
+    grantResults: IntArray
+) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    if (requestCode == 0) {
-        if (checkPermission()) {
-            // Post notification 권한이 허용된 경우를 확인합니다.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                checkExactAlarm()
-            }
+    if (requestCode == PERMISSION_REQUEST_CODE_POST_NOTIFICATIONS) {
+        if (checkPostNotificationPermission()) {
+            // Post notification 권한이 허용된 경우.
+            Log.i(TAG, "POST_NOTIFICATIONS permission granted via dialog.")
+        } else {
+            Log.w(TAG, "POST_NOTIFICATIONS permission denied via dialog.")
         }
     }
 }
 
-private fun checkExactAlarm(): Boolean {
-    if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
-        return true
+
+private fun checkDrawOverlayPermission(): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+        return true // M 미만에서는 런타임 권한 필요 없음
     }
 
-    val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-    val canScheduleExactAlarms = alarmManager.canScheduleExactAlarms()
-
-    if (!canScheduleExactAlarms) {
-        AlertDialog.Builder(this)
-            .setTitle("알림 및 리마인더 허용")
-            .setMessage("알림 및 리마인더 권한을 허용해주세요.")
-            .setPositiveButton("확인") { _, _ ->
-                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
-                intent.data = Uri.parse("package:$packageName")
+    return if (Settings.canDrawOverlays(this)) {
+        true
+    } else {
+        AlertDialog.Builder(this).apply {
+            setTitle("다른앱 위에 그리기")
+            setMessage("다른 앱 위에 그리기 권한을 허용해주세요.")
+            setPositiveButton("확인") { _, _ ->
+                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
+                    data = Uri.parse("package:$packageName")
+                }
                 startActivity(intent)
             }
-            .setNegativeButton("취소") { dialog, _ ->
+            setNegativeButton("취소") { dialog, _ ->
                 dialog.cancel()
             }
-            .create()
-            .show()
-        return false
-    } else {
-        return true
+        }.create().show()
+        false
     }
 }
 
-private fun checkPermission(): Boolean {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-    } else true
+private fun checkPostNotificationPermission(): Boolean {
+    return when {
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ->
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        else -> true
+    }
 }
 
-private fun requestSapPermissions() {
+private fun requestPostNotificationPermission() {
     try {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) requestPermissions(
-            arrayOf(
-                Manifest.permission.POST_NOTIFICATIONS
-            ), 0
-        )
-    } catch (ignored: Exception) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                PERMISSION_REQUEST_CODE_POST_NOTIFICATIONS
+            )
+        }
+    } catch (e: Exception) {
+        Log.e(TAG, "Error requesting POST_NOTIFICATIONS permission", e)
     }
 }
-
-private	fun checkDrawOverlayPermission(): Boolean {
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-			return true
-		}
-		return if (!Settings.canDrawOverlays(this)) {
-			AlertDialog.Builder(this)
-				.setTitle("다른앱 위에 그리기")
-				.setMessage("다른 앱 위에 그리기 권한을 허용해주세요.")
-				.setPositiveButton("확인") { dialog, which ->
-					val intent = Intent()
-					intent.action = Settings.ACTION_MANAGE_OVERLAY_PERMISSION
-					val uri = Uri.parse("package:$packageName")
-					intent.data = uri
-					startActivity(intent)
-				}
-				.setNegativeButton(
-					"취소"
-				) { dialog, which -> dialog.cancel() }
-				.create()
-				.show()
-			false
-		} else {
-			true
-		}
-	}
 ```
 
 - 인앱 버튼 적용 (노티바 미사용)

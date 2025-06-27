@@ -34,11 +34,7 @@ public class MainActivity extends FlutterActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if(!checkPermission()){
                 requestSapPermissions();
-            } else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    checkExactAlarm();
-                }
-            }
+            } 
         }
 
     }
@@ -47,16 +43,10 @@ public class MainActivity extends FlutterActivity {
     public void onResume() {
         super.onResume();
         // TODO - Huvle Library Start
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (checkPermission()) {
-                if (Build.VERSION.SDK_INT >= 34) {
-                    Sap_Func.setServiceState(this,true);
-                }
-                huvleView();
-            }
-        } else {
-            huvleView();
+        if (Build.VERSION.SDK_INT >= 34) {
+            Sap_Func.setServiceState(this,true);
         }
+        huvleView();
 
         // TODO - Huvle Library End
     }
@@ -84,39 +74,6 @@ public class MainActivity extends FlutterActivity {
         });
     }
 
-    public boolean checkExactAlarm() {
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.S) {
-            return true;
-        }
-
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        boolean canScheduleExactAlarms = alarmManager.canScheduleExactAlarms();
-
-        if (!canScheduleExactAlarms) {
-            new AlertDialog.Builder(this)
-                    .setTitle("알림 및 리마인더 허용")
-                    .setMessage("알림 및 리마인더 권한을 허용해주세요.")
-                    .setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
-                            intent.setData(Uri.parse("package:" + getPackageName()));
-                            startActivity(intent);
-                        }
-                    })
-                    .setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.cancel();
-                        }
-                    })
-                    .create()
-                    .show();
-            return false;
-        } else {
-            return true;
-        }
-    }
 
     public boolean checkDrawOverlayPermission() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
@@ -155,12 +112,7 @@ public class MainActivity extends FlutterActivity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 0) {
-            if (checkPermission()) {
-                // Post notification 권한이 허용된 경우를 확인합니다.
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    checkExactAlarm();
-                }
-            }
+            checkPermission();
         }
     }
 

@@ -22,13 +22,16 @@ Huvle SDK 는 **최신 버전**  적용을 권장드립니다.
 ### 1. Manifest
 
 - 구글광고아이디 퍼미션 추가
+- 배터리 사용량 최적화 제외 퍼미션 추가
 - APP Target SDK 33 이상일 경우 POST_Notification 권한 처리   
 - [자세한 사항은 developer 문서 참고](https://developer.android.com/develop/ui/views/notifications/notification-permission?hl=en)
+
 ```
 <manifest>
 ...
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
 ...
 </manifest>
@@ -200,49 +203,69 @@ public void huvleView() {
 ```
 
 ```java
-public boolean checkDrawOverlayPermission() {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-        return true;
-    }
-    if (!Settings.canDrawOverlays(this)) {
+public void checkDrawOverlayPermission() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
         new AlertDialog.Builder(this)
-                .setTitle("다른앱 위에 그리기")
-                .setMessage("다른 앱 위에 그리기 권한을 허용해주세요.")
-                .setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent intent = new Intent();
-                        intent.setAction(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-                        Uri uri = Uri.parse("package:" + getPackageName());
-                        intent.setData(uri);
-                        startActivity(intent);
-                    }
+                .setTitle("다른 앱 위에 그리기")
+                .setMessage("원활한 서비스 제공을 위해 '다른 앱 위에 그리기' 권한이 필요합니다.")
+                .setPositiveButton("설정으로 이동", (dialog, which) -> {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:" + getPackageName()));
+                    overlayPermissionLauncher.launch(intent);
                 })
-                .setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
+                .setNegativeButton("취소", (dialog, which) -> {
+                    Toast.makeText(this, "권한이 거부되어 일부 기능이 제한될 수 있습니다.", Toast.LENGTH_SHORT).show();
+                    checkBatteryOptimizationPermission();
                 })
-                .create()
+                .setCancelable(false)
                 .show();
-        return false;
     } else {
-        return true;
+        checkBatteryOptimizationPermission();
     }
+}
+
+private void checkBatteryOptimizationPermission() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
+            requestIgnoreBatteryOptimizationsDialog();
+        }
+    }
+}
+
+@SuppressLint("BatteryLife")
+private void requestIgnoreBatteryOptimizationsDialog() {
+    if (isFinishing() || isDestroyed()) return;
+    new AlertDialog.Builder(this)
+            .setTitle("배터리 사용량 최적화 제외")
+            .setMessage("앱의 안정적인 백그라운드 동작을 위해 '배터리 사용량 최적화' 목록에서 이 앱을 '최적화 안 함'으로 설정해야 합니다.")
+            .setPositiveButton("설정으로 이동", (dialog, which) -> {
+                Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                try {
+                    batteryOptimizationLauncher.launch(intent);
+                } catch (Exception e) {
+                    Intent generalIntent = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
+                    batteryOptimizationLauncher.launch(generalIntent);
+                }
+            })
+            .setNegativeButton("취소", (dialog, which) -> {
+                Toast.makeText(this, "권한이 거부되어 일부 기능이 제한될 수 있습니다.", Toast.LENGTH_SHORT).show();
+            })
+            .setCancelable(false)
+            .show();
 }
 
 @Override
 public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
     super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    if (requestCode == 0) { 
-        checkPermission();
+    if (requestCode == REQUEST_CODE_POST_NOTIFICATIONS) {
     }
 }
 
 private boolean checkPermission() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        return checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+        return checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
     }
     return true;
 }
@@ -250,12 +273,19 @@ private boolean checkPermission() {
 private void requestSapPermissions() {
     try {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 0); 
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQUEST_CODE_POST_NOTIFICATIONS);
         }
     } catch (Exception ignored) {
     }
 }
 
+private boolean isIgnoringBatteryOptimizations() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        return pm != null && pm.isIgnoringBatteryOptimizations(getPackageName());
+    }
+    return true;
+}
     
 ```
 
@@ -302,54 +332,81 @@ private fun huvleView() {
         })
 }
 
-override fun onRequestPermissionsResult(
-    requestCode: Int,
-    permissions: Array<out String>,
-    grantResults: IntArray
-) {
-    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    if (requestCode == PERMISSION_REQUEST_CODE_POST_NOTIFICATIONS) {
-        if (checkPostNotificationPermission()) {
-            // Post notification 권한이 허용된 경우.
-            Log.i(TAG, "POST_NOTIFICATIONS permission granted via dialog.")
-        } else {
-            Log.w(TAG, "POST_NOTIFICATIONS permission denied via dialog.")
+private fun checkDrawOverlayPermission() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+        requestOverlayPermissionDialog()
+    } else {
+        checkBatteryOptimizationPermission()
+    }
+}
+
+private fun checkBatteryOptimizationPermission() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (!pm.isIgnoringBatteryOptimizations(packageName)) {
+            requestIgnoreBatteryOptimizationsDialog()
         }
     }
 }
 
+private fun requestOverlayPermissionDialog() {
+    if (isFinishing || isDestroyed) return
+    AlertDialog.Builder(this).apply {
+        setTitle("다른 앱 위에 그리기")
+        setMessage("원활한 서비스 제공을 위해 '다른 앱 위에 그리기' 권한이 필요합니다.")
+        setPositiveButton("설정으로 이동") { _, _ ->
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
+                data = Uri.parse("package:$packageName")
+            }
+            overlayPermissionLauncher.launch(intent)
+        }
+        setNegativeButton("취소") { _, _ ->
+            Toast.makeText(this@MainActivity, "권한이 거부되어 일부 기능이 제한될 수 있습니다.", Toast.LENGTH_SHORT).show()
+            checkBatteryOptimizationPermission()
+        }
+        setCancelable(false)
+    }.create().show()
+}
 
-private fun checkDrawOverlayPermission(): Boolean {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-        return true // M 미만에서는 런타임 권한 필요 없음
-    }
+@SuppressLint("BatteryLife")
+private fun requestIgnoreBatteryOptimizationsDialog() {
+    if (isFinishing || isDestroyed) return
+    AlertDialog.Builder(this).apply {
+        setTitle("배터리 사용량 최적화 제외")
+        setMessage("앱의 안정적인 백그라운드 동작을 위해 '배터리 사용량 최적화' 목록에서 이 앱을 '최적화 안 함'으로 설정해야 합니다.")
+        setPositiveButton("설정으로 이동") { _, _ ->
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                data = Uri.parse("package:$packageName")
+            }
+            try {
+                batteryOptimizationLauncher.launch(intent)
+            } catch (e: Exception) {
+                val generalIntent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                batteryOptimizationLauncher.launch(generalIntent)
+            }
+        }
+        setNegativeButton("취소") { _, _ ->
+            Toast.makeText(this@MainActivity, "권한이 거부되어 일부 기능이 제한될 수 있습니다.", Toast.LENGTH_SHORT).show()
+        }
+        setCancelable(false)
+    }.create().show()
+}
 
-    return if (Settings.canDrawOverlays(this)) {
-        true
+
+private fun hasPostNotificationPermission(): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
     } else {
-        AlertDialog.Builder(this).apply {
-            setTitle("다른앱 위에 그리기")
-            setMessage("다른 앱 위에 그리기 권한을 허용해주세요.")
-            setPositiveButton("확인") { _, _ ->
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
-                    data = Uri.parse("package:$packageName")
-                }
-                startActivity(intent)
-            }
-            setNegativeButton("취소") { dialog, _ ->
-                dialog.cancel()
-            }
-        }.create().show()
-        false
+        true
     }
 }
 
-private fun checkPostNotificationPermission(): Boolean {
-    return when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU ->
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-        else -> true
+private fun isIgnoringBatteryOptimizations(): Boolean {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+        return pm.isIgnoringBatteryOptimizations(packageName)
     }
+    return true
 }
 
 private fun requestPostNotificationPermission() {
@@ -357,11 +414,27 @@ private fun requestPostNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissions(
                 arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                PERMISSION_REQUEST_CODE_POST_NOTIFICATIONS
+                REQUEST_CODE_POST_NOTIFICATIONS
             )
         }
     } catch (e: Exception) {
         Log.e(TAG, "Error requesting POST_NOTIFICATIONS permission", e)
+    }
+}
+
+
+override fun onRequestPermissionsResult(
+    requestCode: Int,
+    permissions: Array<out String>,
+    grantResults: IntArray
+) {
+    super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    if (requestCode == REQUEST_CODE_POST_NOTIFICATIONS) {
+        if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            Log.i(TAG, "POST_NOTIFICATIONS permission granted.")
+        } else {
+            Log.w(TAG, "POST_NOTIFICATIONS permission denied.")
+        }
     }
 }
 ```

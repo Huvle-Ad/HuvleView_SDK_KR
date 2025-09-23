@@ -10,7 +10,7 @@ Huvle SDK 는 **최신 버전**  적용을 권장드립니다.
 
 
 ## 제휴 신청
-허블뷰 (Huvle) SDK 제휴 방법은 https://www.huvleview.com/doc/contact.php 에 절차를 안내 드리고 있습니다.
+허블뷰 (Huvle) SDK 제휴 방법은 https://www.huvleview.com/sub/location.php 에 절차를 안내 드리고 있습니다.
 
 
 ### 적용가이드

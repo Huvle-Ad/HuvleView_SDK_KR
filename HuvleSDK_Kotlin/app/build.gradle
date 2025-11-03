@@ -50,7 +50,8 @@ dependencies {
 
     // TODO - Huvle Library
     implementation 'androidx.activity:activity-ktx:1.8.0'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
-    implementation 'com.byappsoft.sap:HuvleSDK:6.2.6.5'
+    implementation 'com.byappsoft.sap:HuvleSDK:6.2.7.4'
     // TODO - Huvle Library
 }

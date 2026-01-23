@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="noti_icon_1">전화</string>
+    <string name="noti_icon_2">카메라</string>
+    <string name="noti_icon_3">캘린더</string>
+    <string name="noti_icon_4">알람</string>
+    <string name="noti_icon_5">설정</string>
+    <string name="noti_icon_web_search">빠른뉴스</string>
+</resources>

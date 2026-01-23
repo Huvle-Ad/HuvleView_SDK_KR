@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">huvleSDKreactSample</string>
+    <string name="noti_icon_1">Call</string>
+    <string name="noti_icon_2">Camera</string>
+    <string name="noti_icon_3">Calendar</string>
+    <string name="noti_icon_4">Alarm</string>
+    <string name="noti_icon_5">Settings</string>
+    <string name="noti_icon_web_search">빠른뉴스</string>
+</resources>

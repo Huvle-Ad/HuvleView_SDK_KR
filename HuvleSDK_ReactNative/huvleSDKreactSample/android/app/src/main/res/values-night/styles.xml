@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <!-- Notibar darkmode text color custom -->
+    <style name="HuvleStatusbar" parent="@android:style/TextAppearance">
+        <item name="android:textColor">#ffffff</item>
+
+    </style>
+
+</resources>

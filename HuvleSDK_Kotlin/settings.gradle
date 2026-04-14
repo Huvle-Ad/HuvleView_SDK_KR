@@ -5,7 +5,12 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        jcenter() // Warning: this repository is going to shut down soon
+        // TODO - Huvle Library
+        maven {
+            name "Huvle"
+            url "https://sdk.huvle.com/repository/internal"
+        }
+        // TODO - Huvle Library
     }
 }
 rootProject.name = "HuvleSDK_Kotlin"

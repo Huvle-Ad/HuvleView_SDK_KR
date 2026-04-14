@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.google.dagger.hilt.android'
 
 android {
     compileSdk 35
@@ -28,8 +29,8 @@ android {
 
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     namespace 'com.huvle.huvlesdk'
 
@@ -57,6 +58,11 @@ dependencies {
     implementation 'androidx.activity:activity:1.8.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
-    implementation 'com.byappsoft.sap:HuvleSDK:6.2.7.8'
+    implementation 'com.byappsoft.sap:HuvleSDK:6.3.0.0'
+    implementation 'com.google.android.material:material:1.11.0'
     // TODO - Huvle Library
+
+    // Hilt
+    implementation 'com.google.dagger:hilt-android:2.50'
+    annotationProcessor 'com.google.dagger:hilt-compiler:2.50'
 }

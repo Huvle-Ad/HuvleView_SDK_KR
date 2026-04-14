@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
-import android.util.Log
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -19,29 +18,39 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.byappsoft.sap.launcher.Sap_act_main_launcher
+import androidx.lifecycle.lifecycleScope
+import com.byappsoft.sap.api.HuvleConfig
+import com.byappsoft.sap.api.HuvleSDK
+import com.byappsoft.sap.domain.model.Result
 import com.byappsoft.sap.utils.Sap_Func
+import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
     companion object {
-        private const val TAG = "MainActivity"
         private const val REQUEST_CODE_POST_NOTIFICATIONS = 1001
     }
 
-    // 설정 화면 이동 및 결과 처리를 위한 ActivityResultLauncher
-    private lateinit var overlayPermissionLauncher: ActivityResultLauncher<Intent>
-    private lateinit var batteryOptimizationLauncher: ActivityResultLauncher<Intent>
+    // 권한 요청 플로우 중복 실행 방지 플래그
+    // onResume()이 설정화면 복귀 시에도 호출되기 때문에 필요
+    private var isPermissionFlowDone = false
+
+    private val overlayPermissionLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            // 오버레이 설정 복귀 후 배터리 최적화만 확인 (initHuvleSDK 재호출 없음)
+            checkBatteryOptimizationPermission()
+        }
+
+    private val batteryOptimizationLauncher: ActivityResultLauncher<Intent> =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        initializeLaunchers()
-
         // 안드로이드 13 (TIRAMISU) 이상 알림 권한 확인
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (!hasPostNotificationPermission()) {
+            if (!checkPostNotificationPermission()) {
                 requestPostNotificationPermission()
             }
         }
@@ -59,56 +68,82 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Android 14+ 서비스 상태 갱신
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             Sap_Func.setServiceState(this, true)
         }
-        huvleView()
+        initHuvleSDK()
     }
 
-    private fun initializeLaunchers() {
-        overlayPermissionLauncher = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) {
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                checkBatteryOptimizationPermission()
-            }, 500)
-        }
+    private fun initHuvleSDK() {
 
-        batteryOptimizationLauncher = registerForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) {
-            if (isIgnoringBatteryOptimizations()) {
-                Toast.makeText(this, "배터리 최적화 제외 설정이 완료되었습니다.", Toast.LENGTH_SHORT).show()
+        lifecycleScope.launch {
+            val result = HuvleSDK.initialize(
+                context = this@MainActivity,
+                agencyKey = "bynetwork",
+                config = HuvleConfig(
+                    enableNotification = false,
+                    enableUrlSearch = true
+                )
+            )
+
+            when (result) {
+                is Result.Success -> {
+                    // 권한 플로우는 최초 1회만 실행
+                    // (onResume이 설정화면 복귀 시마다 호출되므로 중복 방지)
+                    if (!isPermissionFlowDone) {
+                        isPermissionFlowDone = true
+                        // [선택] 노티바 동의창을 앱에서 직접 운영하려면 아래 주석을 해제하세요.
+                        // 동의 여부는 SharedPreferences 등에 저장해 재기동 시 중복 노출을 막아야 합니다.
+                        // showNotificationConsentDialog()
+                        checkDrawOverlayPermission()
+                    }
+                }
+                is Result.Error -> { /* 초기화 실패 처리 */ }
+                is Result.Loading -> { /* 무시 */ }
             }
         }
     }
 
-    private fun huvleView() {
-        Sap_Func.setNotiBarLockScreen(this, false)
-        Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true,
-            object : Sap_act_main_launcher.OnLauncher {
-                override fun onDialogOkClicked() {
-                    checkDrawOverlayPermission()
-                }
-
-                override fun onDialogCancelClicked() {
-                    Log.d(TAG, "HuvleView dialog cancelled.")
-                }
-
-                override fun onInitSapStartapp() {
-                    Log.d(TAG, "HuvleView onInitSapStartapp.")
-                }
-
-                override fun onUnknown() {
-                    Log.w(TAG, "HuvleView onUnknown.")
-                }
-            })
+    // [선택] 신규 연동 전용 노티바 동의창 샘플
+    // SDK가 동의창을 자동으로 띄우지 않으므로 앱이 직접 구현합니다.
+    // 사용하려면 위 initHuvleSDK()의 showNotificationConsentDialog() 주석을 해제하세요.
+    // 동의 여부는 SharedPreferences 등에 저장해 재기동 시 중복 노출을 막아야 합니다.
+    private fun showNotificationConsentDialog() {
+        if (isFinishing || isDestroyed) return
+        AlertDialog.Builder(this).apply {
+            setTitle("알림 서비스")
+            setMessage("알림바 서비스를 사용하시겠습니까?")
+            setPositiveButton("동의") { _, _ ->
+                Sap_Func.notiUpdate(applicationContext)
+                checkDrawOverlayPermission()
+            }
+            setNegativeButton("거부") { _, _ ->
+                Sap_Func.notiCancel(applicationContext)
+                checkDrawOverlayPermission()
+            }
+            setCancelable(false)
+        }.create().show()
     }
-
 
     private fun checkDrawOverlayPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            requestOverlayPermissionDialog()
+            AlertDialog.Builder(this).apply {
+                setTitle("다른 앱 위에 그리기")
+                setMessage("원활한 서비스 제공을 위해 '다른 앱 위에 그리기' 권한이 필요합니다.")
+                setPositiveButton("설정으로 이동") { _, _ ->
+                    overlayPermissionLauncher.launch(
+                        Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
+                            data = Uri.parse("package:$packageName")
+                        }
+                    )
+                }
+                setNegativeButton("취소") { _, _ ->
+                    Toast.makeText(this@MainActivity, "권한이 거부되어 일부 기능이 제한될 수 있습니다.", Toast.LENGTH_SHORT).show()
+                    checkBatteryOptimizationPermission()
+                }
+                setCancelable(false)
+            }.create().show()
         } else {
             checkBatteryOptimizationPermission()
         }
@@ -121,25 +156,6 @@ class MainActivity : AppCompatActivity() {
                 requestIgnoreBatteryOptimizationsDialog()
             }
         }
-    }
-
-    private fun requestOverlayPermissionDialog() {
-        if (isFinishing || isDestroyed) return
-        AlertDialog.Builder(this).apply {
-            setTitle("다른 앱 위에 그리기")
-            setMessage("원활한 서비스 제공을 위해 '다른 앱 위에 그리기' 권한이 필요합니다.")
-            setPositiveButton("설정으로 이동") { _, _ ->
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
-                    data = Uri.parse("package:$packageName")
-                }
-                overlayPermissionLauncher.launch(intent)
-            }
-            setNegativeButton("취소") { _, _ ->
-                Toast.makeText(this@MainActivity, "권한이 거부되어 일부 기능이 제한될 수 있습니다.", Toast.LENGTH_SHORT).show()
-                checkBatteryOptimizationPermission()
-            }
-            setCancelable(false)
-        }.create().show()
     }
 
     @SuppressLint("BatteryLife")
@@ -155,8 +171,9 @@ class MainActivity : AppCompatActivity() {
                 try {
                     batteryOptimizationLauncher.launch(intent)
                 } catch (e: Exception) {
-                    val generalIntent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-                    batteryOptimizationLauncher.launch(generalIntent)
+                    batteryOptimizationLauncher.launch(
+                        Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                    )
                 }
             }
             setNegativeButton("취소") { _, _ ->
@@ -166,22 +183,12 @@ class MainActivity : AppCompatActivity() {
         }.create().show()
     }
 
-
-    private fun hasPostNotificationPermission(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-        } else {
-            true
-        }
-    }
-
-    private fun isIgnoringBatteryOptimizations(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-            return pm.isIgnoringBatteryOptimizations(packageName)
-        }
-        return true
-    }
+    private fun checkPostNotificationPermission(): Boolean =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                this, Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else true
 
     private fun requestPostNotificationPermission() {
         try {
@@ -191,11 +198,8 @@ class MainActivity : AppCompatActivity() {
                     REQUEST_CODE_POST_NOTIFICATIONS
                 )
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error requesting POST_NOTIFICATIONS permission", e)
-        }
+        } catch (e: Exception) { }
     }
-
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -203,12 +207,5 @@ class MainActivity : AppCompatActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_POST_NOTIFICATIONS) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.i(TAG, "POST_NOTIFICATIONS permission granted.")
-            } else {
-                Log.w(TAG, "POST_NOTIFICATIONS permission denied.")
-            }
-        }
     }
 }

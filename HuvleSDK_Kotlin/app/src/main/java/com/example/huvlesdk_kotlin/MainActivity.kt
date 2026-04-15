@@ -18,12 +18,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
-import com.byappsoft.sap.api.HuvleConfig
-import com.byappsoft.sap.api.HuvleSDK
-import com.byappsoft.sap.domain.model.Result
+import com.byappsoft.sap.browser.Sap_BrowserActivity
+import com.byappsoft.sap.browser.Sap_MainActivity
+import com.byappsoft.sap.launcher.Sap_act_main_launcher
 import com.byappsoft.sap.utils.Sap_Func
-import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -37,7 +35,7 @@ class MainActivity : AppCompatActivity() {
 
     private val overlayPermissionLauncher: ActivityResultLauncher<Intent> =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-            // 오버레이 설정 복귀 후 배터리 최적화만 확인 (initHuvleSDK 재호출 없음)
+            // 오버레이 설정 복귀 후 배터리 최적화만 확인
             checkBatteryOptimizationPermission()
         }
 
@@ -55,11 +53,19 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        startPermissionFlow()
+
         findViewById<Button>(R.id.noti_on_btn).setOnClickListener {
             Sap_Func.notiUpdate(applicationContext)
         }
         findViewById<Button>(R.id.noti_off_btn).setOnClickListener {
             Sap_Func.notiCancel(applicationContext)
+        }
+        findViewById<Button>(R.id.inapp_browser_btn).setOnClickListener {
+            val intent = Intent(this, Sap_MainActivity::class.java).apply {
+                putExtra(Sap_BrowserActivity.PARAM_OPEN_URL, "https://www.huvle.com/global_set.php")
+            }
+            startActivity(intent)
         }
 
         val txtPackageName = findViewById<TextView>(R.id.txt)
@@ -72,58 +78,26 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             Sap_Func.setServiceState(this, true)
         }
-        initHuvleSDK()
+        huvleView()
     }
 
-    private fun initHuvleSDK() {
-
-        lifecycleScope.launch {
-            val result = HuvleSDK.initialize(
-                context = this@MainActivity,
-                agencyKey = "bynetwork",
-                config = HuvleConfig(
-                    enableNotification = false,
-                    enableUrlSearch = true
-                )
-            )
-
-            when (result) {
-                is Result.Success -> {
-                    // 권한 플로우는 최초 1회만 실행
-                    // (onResume이 설정화면 복귀 시마다 호출되므로 중복 방지)
-                    if (!isPermissionFlowDone) {
-                        isPermissionFlowDone = true
-                        // [선택] 노티바 동의창을 앱에서 직접 운영하려면 아래 주석을 해제하세요.
-                        // 동의 여부는 SharedPreferences 등에 저장해 재기동 시 중복 노출을 막아야 합니다.
-                        // showNotificationConsentDialog()
-                        checkDrawOverlayPermission()
-                    }
-                }
-                is Result.Error -> { /* 초기화 실패 처리 */ }
-                is Result.Loading -> { /* 무시 */ }
+    private fun huvleView() {
+        Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true,
+            object : Sap_act_main_launcher.OnLauncher {
+                override fun onDialogOkClicked() { }
+                override fun onDialogCancelClicked() { }
+                override fun onInitSapStartapp() { }
+                override fun onUnknown() { }
             }
+        )
+    }
+
+    // 권한 플로우 진입점 - 중복 실행 방지 후 오버레이 권한 확인
+    private fun startPermissionFlow() {
+        if (!isPermissionFlowDone) {
+            isPermissionFlowDone = true
+            checkDrawOverlayPermission()
         }
-    }
-
-    // [선택] 신규 연동 전용 노티바 동의창 샘플
-    // SDK가 동의창을 자동으로 띄우지 않으므로 앱이 직접 구현합니다.
-    // 사용하려면 위 initHuvleSDK()의 showNotificationConsentDialog() 주석을 해제하세요.
-    // 동의 여부는 SharedPreferences 등에 저장해 재기동 시 중복 노출을 막아야 합니다.
-    private fun showNotificationConsentDialog() {
-        if (isFinishing || isDestroyed) return
-        AlertDialog.Builder(this).apply {
-            setTitle("알림 서비스")
-            setMessage("알림바 서비스를 사용하시겠습니까?")
-            setPositiveButton("동의") { _, _ ->
-                Sap_Func.notiUpdate(applicationContext)
-                checkDrawOverlayPermission()
-            }
-            setNegativeButton("거부") { _, _ ->
-                Sap_Func.notiCancel(applicationContext)
-                checkDrawOverlayPermission()
-            }
-            setCancelable(false)
-        }.create().show()
     }
 
     private fun checkDrawOverlayPermission() {

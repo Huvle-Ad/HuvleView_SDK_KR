@@ -32,5 +32,13 @@
         android:layout_marginTop="10dp"
         android:layout_below="@id/noti_on_btn" />
 
+    <Button
+        android:id="@+id/inapp_browser_btn"
+        android:layout_width="200dp"
+        android:layout_height="55dp"
+        android:layout_centerInParent="true"
+        android:text="InAppBrowser"
+        android:layout_marginTop="10dp"
+        android:layout_below="@id/noti_off_btn" />
 
 </RelativeLayout>

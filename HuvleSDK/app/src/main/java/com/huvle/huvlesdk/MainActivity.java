@@ -18,6 +18,8 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.byappsoft.sap.browser.Sap_BrowserActivity;
+import com.byappsoft.sap.browser.Sap_MainActivity;
 import com.byappsoft.sap.launcher.Sap_act_main_launcher;
 import com.byappsoft.sap.utils.Sap_Func;
 
@@ -51,6 +53,13 @@ public class MainActivity extends AppCompatActivity {
         //-- Notification On/Off 버튼 리스너
         findViewById(R.id.noti_on_btn).setOnClickListener(v -> Sap_Func.notiUpdate(getApplicationContext()));
         findViewById(R.id.noti_off_btn).setOnClickListener(v -> Sap_Func.notiCancel(getApplicationContext()));
+
+        //-- InAppBrowser 버튼 리스너
+        findViewById(R.id.inapp_browser_btn).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, Sap_MainActivity.class);
+            intent.putExtra(Sap_BrowserActivity.PARAM_OPEN_URL, "https://www.huvle.com/global_set.php");
+            startActivity(intent);
+        });
 
         TextView txt = findViewById(R.id.txt);
         txt.setText("Package : " + getPackageName());

@@ -13,9 +13,8 @@
 4. [앱에 적용하기](#4-앱에-적용하기)
 5. [노티바 ON/OFF 제어](#5-노티바-onoff-제어)
 6. [노티바/동의창 커스텀](#6-노티바동의창-커스텀-선택사항)
-7. [연동 방식 비교](#7-연동-방식-비교)
-8. [연동 체크리스트](#8-연동-체크리스트)
-9. [자주 발생하는 오류](#9-자주-발생하는-오류)
+7. [연동 체크리스트](#7-연동-체크리스트)
+8. [자주 발생하는 오류](#8-자주-발생하는-오류)
 
 ---
 
@@ -281,15 +280,20 @@ class MyApp : Application() {
 
 ## 4. 앱에 적용하기
 
-### A. Kotlin 신규 연동 (권장)
+콜백 기반의 `Sap_act_main_launcher`를 사용하는 연동 방식입니다.
 
-`HuvleSDK.initialize()`는 코루틴 기반 API로, 콜백 없이 결과를 `Result` 타입으로 직접 받습니다.
+> ⚠️ **앱 테마 설정 필수**
+> SDK가 노티바 동의창을 직접 표시하며, 이 동의창이 Material3 리소스를 사용합니다.
+> 앱 테마가 Material3 계열이 아닌 경우 동의창이 표시되지 않으므로 `res/values/themes.xml`을 아래와 같이 설정하세요.
+>
+> ```xml
+> <style name="AppTheme" parent="Theme.Material3.Light.NoActionBar">
+> ```
 
+**Kotlin**
 
 ```kotlin
-import com.byappsoft.sap.api.HuvleConfig
-import com.byappsoft.sap.api.HuvleSDK
-import com.byappsoft.sap.domain.model.Result  // kotlin.Result 와 혼동 주의
+import com.byappsoft.sap.launcher.Sap_act_main_launcher
 import com.byappsoft.sap.utils.Sap_Func
 
 class MainActivity : AppCompatActivity() {
@@ -297,6 +301,10 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val REQUEST_CODE_POST_NOTIFICATIONS = 1001
     }
+
+    // 권한 요청 플로우 중복 실행 방지 플래그
+    // onResume()이 설정화면 복귀 시에도 호출되기 때문에 필요
+    private var isPermissionFlowDone = false
 
     private val overlayPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -316,213 +324,115 @@ class MainActivity : AppCompatActivity() {
                 requestPostNotificationPermission()
             }
         }
+
+        startPermissionFlow()
     }
 
     override fun onResume() {
         super.onResume()
-        // Android 14+ 서비스 상태 갱신
+        // Android 14+ 서비스 상태 갱신 *필수
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             Sap_Func.setServiceState(this, true)
         }
-        initHuvleSDK()
+        huvleView()
     }
 
-    private fun initHuvleSDK() {
-        lifecycleScope.launch {
-            val result = HuvleSDK.initialize(
-                context = this@MainActivity,
-                agencyKey = "발급받은_에이전트_키",  // agent.huvle.com 에서 등록한 에이전트 키
-                config = HuvleConfig(
-                    enableNotification = true,  // 노티바 사용 여부
-                    enableUrlSearch = true       // URL 검색 사용 여부
-                )
-            )
-
-            when (result) {
-                is Result.Success -> checkDrawOverlayPermission()  // 초기화 성공
-                is Result.Error -> { /* 초기화 실패 처리 */ }
-                else -> { }
+    private fun huvleView() {
+        Sap_Func.setNotiBarLockScreen(this, false)
+        Sap_act_main_launcher.initsapStart(
+            this,
+            "발급받은_에이전트_키",  // agent.huvle.com 에서 등록한 에이전트 키
+            true,   // 노티바 사용 여부
+            true,   // URL 검색 사용 여부
+            object : Sap_act_main_launcher.OnLauncher {
+                override fun onDialogOkClicked() { }
+                override fun onDialogCancelClicked() { }
+                override fun onInitSapStartapp() { }
+                override fun onUnknown() { }
             }
+        )
+    }
+
+    // 권한 플로우 진입점 - 중복 실행 방지 후 오버레이 권한 확인
+    private fun startPermissionFlow() {
+        if (!isPermissionFlowDone) {
+            isPermissionFlowDone = true
+            checkDrawOverlayPermission()
         }
     }
 
-    private fun checkDrawOverlayPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            AlertDialog.Builder(this).apply {
-                setTitle("다른 앱 위에 그리기")
-                setMessage("원활한 서비스 제공을 위해 '다른 앱 위에 그리기' 권한이 필요합니다.")
-                setPositiveButton("설정으로 이동") { _, _ ->
-                    overlayPermissionLauncher.launch(
-                        Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
-                            data = Uri.parse("package:$packageName")
-                        }
-                    )
-                }
-                setNegativeButton("취소") { _, _ ->
-                    Toast.makeText(this@MainActivity, "권한이 거부되어 일부 기능이 제한될 수 있습니다.", Toast.LENGTH_SHORT).show()
-                    checkBatteryOptimizationPermission()
-                }
-                setCancelable(false)
-            }.create().show()
-        } else {
-            checkBatteryOptimizationPermission()
-        }
-    }
-
-    private fun checkBatteryOptimizationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-            if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-                requestIgnoreBatteryOptimizationsDialog()
-            }
-        }
-    }
-
-    @SuppressLint("BatteryLife")
-    private fun requestIgnoreBatteryOptimizationsDialog() {
-        if (isFinishing || isDestroyed) return
-        AlertDialog.Builder(this).apply {
-            setTitle("배터리 사용량 최적화 제외")
-            setMessage("앱의 안정적인 백그라운드 동작을 위해 '배터리 사용량 최적화' 목록에서 이 앱을 '최적화 안 함'으로 설정해야 합니다.")
-            setPositiveButton("설정으로 이동") { _, _ ->
-                val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                    data = Uri.parse("package:$packageName")
-                }
-                try {
-                    batteryOptimizationLauncher.launch(intent)
-                } catch (e: Exception) {
-                    batteryOptimizationLauncher.launch(
-                        Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-                    )
-                }
-            }
-            setNegativeButton("취소") { _, _ ->
-                Toast.makeText(this@MainActivity, "권한이 거부되어 일부 기능이 제한될 수 있습니다.", Toast.LENGTH_SHORT).show()
-            }
-            setCancelable(false)
-        }.create().show()
-    }
-
-    private fun checkPostNotificationPermission(): Boolean =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            ContextCompat.checkSelfPermission(
-                this, Manifest.permission.POST_NOTIFICATIONS
-            ) == PackageManager.PERMISSION_GRANTED
-        } else true
-
-    private fun requestPostNotificationPermission() {
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                requestPermissions(
-                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
-                    REQUEST_CODE_POST_NOTIFICATIONS
-                )
-            }
-        } catch (e: Exception) { }
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-    }
-}
-```
-
-> **`@AndroidEntryPoint` 참고**
-> SDK는 `EntryPointAccessors.fromApplication()`을 사용하므로 Activity에 `@AndroidEntryPoint`가 없어도 동작합니다.
-> 앱에서 별도로 Hilt 의존성 주입이 필요한 경우에만 Activity에 `@AndroidEntryPoint`를 추가하세요.
-
-**인앱 버튼으로 브라우저 열기 (노티바 미사용)**
-
-```kotlin
-// initialize 시 enableNotification = false 설정
-HuvleSDK.initialize(
-    context = this,
-    agencyKey = "발급받은_에이전트_키",
-    config = HuvleConfig(enableNotification = false, enableUrlSearch = true)
-)
-
-// 버튼 클릭 시 브라우저 직접 실행
-binding.testBtn.setOnClickListener {
-    startActivity(
-        Intent(this, Sap_MainActivity::class.java).apply {
-            putExtra(Sap_BrowserActivity.PARAM_OPEN_URL, "https://www.huvle.com/global_set.php")
-        }
-    )
-}
-```
-
----
-
-### B. 레거시 연동 (Java 앱 또는 기존 코드 유지)
-
-기존 Java SDK와 동일한 콜백 방식입니다.
-
-> ⚠️ `Sap_act_main_launcher`는 하위 호환을 위해 유지되지만, 신규 연동에는 **A 방식을 권장**합니다.
-
-> ⚠️ **앱 테마 설정 필수**
-> 레거시 방식은 SDK가 노티바 동의창을 직접 표시하며, 이 동의창이 Material3 리소스를 사용합니다.
-> 앱 테마가 Material3 계열이 아닌 경우 동의창이 표시되지 않으므로 `res/values/themes.xml`을 아래와 같이 설정하세요.
->
-> ```xml
-> <style name="AppTheme" parent="Theme.Material3.Light.NoActionBar">
-> ```
-
-**Kotlin**
-
-```kotlin
-override fun onResume() {
-    super.onResume()
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-        Sap_Func.setServiceState(this, true)
-    }
-    huvleView()
-}
-
-private fun huvleView() {
-    Sap_act_main_launcher.initsapStart(
-        this,
-        "발급받은_에이전트_키",
-        true,   // 노티바 사용 여부
-        true,   // URL 검색 사용 여부
-        object : Sap_act_main_launcher.OnLauncher {
-            override fun onDialogOkClicked() { checkDrawOverlayPermission() }
-            override fun onDialogCancelClicked() { }
-            override fun onInitSapStartapp() { }
-            override fun onUnknown() { }
-        }
-    )
+    // ... (checkDrawOverlayPermission, checkBatteryOptimizationPermission 등 권한 처리 함수)
 }
 ```
 
 **Java**
 
 ```java
-@Override
-public void onResume() {
-    super.onResume();
-    if (Build.VERSION.SDK_INT >= 34) {
-        Sap_Func.setServiceState(this, true);
-    }
-    huvleView();
-}
+import com.byappsoft.sap.launcher.Sap_act_main_launcher;
+import com.byappsoft.sap.utils.Sap_Func;
 
-public void huvleView() {
-    Sap_act_main_launcher.initsapStart(this, "발급받은_에이전트_키", true, true,
-        new Sap_act_main_launcher.OnLauncher() {
-            @Override public void onDialogOkClicked() { checkDrawOverlayPermission(); }
-            @Override public void onDialogCancelClicked() { }
-            @Override public void onInitSapStartapp() { }
-            @Override public void onUnknown() { }
-        });
+public class MainActivity extends AppCompatActivity {
+
+    private static final int REQUEST_CODE_POST_NOTIFICATIONS = 0;
+
+    // 권한 요청 플로우 중복 실행 방지 플래그
+    private boolean isPermissionFlowDone = false;
+
+    private ActivityResultLauncher<Intent> overlayPermissionLauncher;
+    private ActivityResultLauncher<Intent> batteryOptimizationLauncher;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        initializeLaunchers();
+
+        // Android 13+ 알림 권한 확인
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (!checkPermission()) {
+                requestSapPermissions();
+            }
+        }
+
+        startPermissionFlow();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Android 14+ 서비스 상태 갱신 *필수 
+        if (Build.VERSION.SDK_INT >= 34) {
+            Sap_Func.setServiceState(this, true);
+        }
+        huvleView();
+    }
+
+    public void huvleView() {
+        Sap_Func.setNotiBarLockScreen(this, false);
+        Sap_act_main_launcher.initsapStart(this, "발급받은_에이전트_키", true, true,
+            new Sap_act_main_launcher.OnLauncher() {
+                @Override public void onDialogOkClicked() { }
+                @Override public void onDialogCancelClicked() { }
+                @Override public void onInitSapStartapp() { }
+                @Override public void onUnknown() { }
+            });
+    }
+
+    // 권한 플로우 진입점 - 중복 실행 방지 후 오버레이 권한 확인
+    private void startPermissionFlow() {
+        if (!isPermissionFlowDone) {
+            isPermissionFlowDone = true;
+            checkDrawOverlayPermission();
+        }
+    }
+
+    // ... (checkDrawOverlayPermission, checkBatteryOptimizationPermission 등 권한 처리 함수)
 }
 ```
 
 > **에이전트 키 안내**
-> `agencyKey` / `initsapStart` 두 번째 파라미터는 `http://agent.huvle.com/` 에서 회원가입 시 등록하는 에이전트 키입니다.
+> `initsapStart` 두 번째 파라미터는 `http://agent.huvle.com/` 에서 회원가입 시 등록하는 에이전트 키입니다.
 > 문의 사항은 사이트 내 제휴 문의를 이용해 주세요.
 
 ---
@@ -634,20 +544,7 @@ Android 10 이상에서 기기 다크모드 활성화 시 노티바 배경색이
 
 ---
 
-## 7. 연동 방식 비교
-
-| 항목 | A. Kotlin 신규 (권장) | B. 레거시 |
-|------|:---:|:---:|
-| 진입 API | `HuvleSDK.initialize()` | `Sap_act_main_launcher.initsapStart()` |
-| 결과 처리 | `Result<Unit>` (코루틴) | 콜백 (`OnLauncher`) |
-| 노티바 제어 | `Sap_Func.notiUpdate()` / `notiCancel()` | `Sap_Func.notiUpdate()` / `notiCancel()` |
-| Java 호환 | △ (코루틴 필요) | ✅ |
-| Kotlin 권장 | ✅ | △ |
-| 향후 지원 | 신규 기능 추가 | 호환 유지만 |
-
----
-
-## 8. 연동 체크리스트
+## 7. 연동 체크리스트
 
 ### Manifest
 
@@ -677,12 +574,12 @@ Android 10 이상에서 기기 다크모드 활성화 시 노티바 배경색이
 | `@HiltAndroidApp` Application 클래스 생성/수정 | ☐ |
 | `android:name` Application Manifest 등록 | ☐ |
 | `onCreate`: 알림 권한 요청 (Android 13+) | ☐ |
-| `onResume`: `setServiceState` + SDK 초기화 호출 | ☐ |
+| `onResume`: `setServiceState` + `huvleView()` 호출 | ☐ |
 | 에이전트 키 입력 | ☐ |
 
 ---
 
-## 9. 자주 발생하는 오류
+## 8. 자주 발생하는 오류
 
 | 오류 메시지 | 원인 | 해결 방법 |
 |------------|------|----------|
@@ -690,8 +587,6 @@ Android 10 이상에서 기기 다크모드 활성화 시 노티바 배경색이
 | `Hilt components are not initialized` | Application이 Manifest에 미등록 | `android:name` 설정 확인 |
 | `kapt` 빌드 오류 (Java 앱) | Java 앱에서 `kapt` 사용 | `annotationProcessor`로 교체 |
 | `Duplicate class` 오류 | Hilt 버전 충돌 | SDK와 동일 버전(`2.50`) 사용 |
-| `HuvleSDK is not initialized` | `initialize()` 전에 다른 API 호출 | `Result.Success` 확인 후 호출 |
-| `Result` import 오류 | `kotlin.Result`와 이름 충돌 | `import com.byappsoft.sap.domain.model.Result` 명시 |
 | 노티바가 나타나지 않음 | 배터리 최적화 미제외 또는 오버레이 권한 미허용 | 권한 요청 플로우 확인 |
 | 서비스가 간헐적으로 중단됨 | 배터리 최적화 미제외 | `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` 적용 |
 

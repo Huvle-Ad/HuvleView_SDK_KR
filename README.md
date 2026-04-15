@@ -156,6 +156,23 @@ dependencyResolutionManagement {
 
 ---
 
+### Hilt 플러그인 추가 (루트 build.gradle)
+
+`buildscript` 방식의 프로젝트는 루트 `build.gradle`에 Hilt 플러그인 classpath를 추가해야 합니다.
+
+```groovy
+// 루트 build.gradle
+buildscript {
+    dependencies {
+        classpath 'com.google.dagger:hilt-android-gradle-plugin:2.50'
+    }
+}
+```
+
+> `pluginManagement` 방식(`settings.gradle`에 플러그인 버전 선언)을 사용하는 프로젝트는 이 단계가 필요 없습니다.
+
+---
+
 ### 의존성 추가
 
 **Kotlin 앱 (`build.gradle.kts`)**

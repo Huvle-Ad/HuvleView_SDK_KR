@@ -86,26 +86,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun huvleView() {
-//        Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true,
-//            object : Sap_act_main_launcher.OnLauncher {
-//                override fun onDialogOkClicked() { }
-//                override fun onDialogCancelClicked() { }
-//                override fun onInitSapStartapp() { }
-//                override fun onUnknown() { }
-//            }
-//        )
-
-        lifecycleScope.launch {
-            val result = HuvleSDK.initialize(
-                context = this@MainActivity,
-                agencyKey = "발급받은_에이전트_키",  // agent.huvle.com 에서 등록한 에이전트 키
-                config = HuvleConfig(
-                    enableNotification = true,  // 노티바 사용 여부
-                    enableUrlSearch = true
-                )
-            )
-
-        }
+        Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true,
+            object : Sap_act_main_launcher.OnLauncher {
+                override fun onDialogOkClicked() { }
+                override fun onDialogCancelClicked() { }
+                override fun onInitSapStartapp() { }
+                override fun onUnknown() { }
+            }
+        )
     }
 
     // 권한 플로우 진입점 - 중복 실행 방지 후 오버레이 권한 확인

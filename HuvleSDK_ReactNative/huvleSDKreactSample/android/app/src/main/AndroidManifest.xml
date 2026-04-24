@@ -38,9 +38,12 @@
       <service
           android:name="com.byappsoft.sap.service.HuvleNotiBarService"
           android:exported="true"
-          android:foregroundServiceType="specialUse">
-          <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-              android:value="explanation_for_special_use"/>
+          android:foregroundServiceType="specialUse"
+          tools:node="merge">
+          <property
+              android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+              android:value="explanation_for_special_use"
+              tools:replace="android:value" />
       </service>
 
     </application>

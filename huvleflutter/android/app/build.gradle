@@ -32,7 +32,7 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.huvle.huvlesdk.huvleflutter"
-    compileSdk 35
+    compileSdk 36
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -70,7 +70,7 @@ dependencies {
 
     // TODO - Huvle Library Start
     implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
-    implementation 'com.byappsoft.sap:HuvleSDK:6.3.0.0'
+    implementation 'com.byappsoft.sap:HuvleSDK:6.3.0.1'
     implementation 'androidx.activity:activity:1.8.0'
     implementation 'androidx.multidex:multidex:2.0.1'
     

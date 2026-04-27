@@ -138,7 +138,7 @@ distributionUrl=https\://services.gradle.org/distributions/gradle-8.9-bin.zip
             tools:node="merge">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="explanation_for_special_use"
+                android:value="notification_bar"
                 tools:replace="android:value" />
         </service>
 

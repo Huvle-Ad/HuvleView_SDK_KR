@@ -138,6 +138,10 @@ dependencies {
 
 앱 실행 시 **알림 → 다른 앱 위에 그리기 → 배터리 최적화 제외** 순서대로 권한을 요청하고 SDK를 초기화합니다.
 
+> ⚠️ **SDK 초기화 위치 — 필수 적용**
+> **SDK는 반드시 앱 실행 후 사용자에게 가장 먼저 표시되는 화면(Main Activity)의 `onResume()`에서 초기화해야 합니다.**
+> 스플래시 등 별도 런처 화면이 있더라도 **실질적인 첫 메인 화면**의 `onResume()`에 적용해야 올바르게 동작합니다.
+
 ```kotlin
 // android/app/src/main/java/.../MainActivity.kt
 class MainActivity : ReactActivity() {
@@ -211,6 +215,16 @@ class MainActivity : ReactActivity() {
         try {
             Sap_act_main_launcher.initsapStart(this, "bynetwork", false, true)
         } catch (e: Exception) { e.printStackTrace() }
+    }
+
+    // 앱 실행 후 첫 번째로 표시되는 화면(Main Activity)의 onResume에서 초기화
+    override fun onResume() {
+        super.onResume()
+        // Android 14+ 서비스 상태 갱신 *필수
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            Sap_Func.setServiceState(this, true)
+        }
+        initHuvleSDK()
     }
 
     override fun getMainComponentName(): String = "huvleSDKreactSample"

@@ -166,6 +166,10 @@ distributionUrl=https\://services.gradle.org/distributions/gradle-8.9-bin.zip
 앱 실행 시 **알림 → 다른 앱 위에 그리기 → 배터리 최적화 제외** 순서대로 권한을 요청하고 SDK를 초기화합니다.
 Flutter와의 통신을 위해 **MethodChannel**도 함께 설정합니다.
 
+> ⚠️ **SDK 초기화 위치 — 필수 적용**
+> **SDK는 반드시 앱 실행 후 사용자에게 가장 먼저 표시되는 화면(Main Activity)의 `onResume()`에서 초기화해야 합니다.**
+> 스플래시 등 별도 런처 화면이 있더라도 **실질적인 첫 메인 화면**의 `onResume()`에 적용해야 올바르게 동작합니다.
+
 ```java
 // android/app/src/main/java/.../MainActivity.java
 public class MainActivity extends FlutterActivity {
@@ -219,6 +223,7 @@ public class MainActivity extends FlutterActivity {
         startPermissionFlow();
     }
 
+    // 앱 실행 후 첫 번째로 표시되는 화면(Main Activity)의 onResume에서 초기화
     @Override
     public void onResume() {
         super.onResume();

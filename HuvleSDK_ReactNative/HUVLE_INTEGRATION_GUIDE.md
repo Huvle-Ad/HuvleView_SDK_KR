@@ -67,7 +67,7 @@ dependencies {
     implementation("com.facebook.react:react-android")
 
     // Huvle SDK & Dependencies
-    implementation 'com.byappsoft.sap:HuvleSDK:6.3.0.1'
+    implementation 'com.byappsoft.sap:HuvleSDK:6.3.0.2'
     implementation 'com.google.android.gms:play-services-ads-identifier:18.0.1'
     implementation 'androidx.activity:activity:1.8.0'
 }

@@ -18,14 +18,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
-import com.byappsoft.sap.api.HuvleConfig
-import com.byappsoft.sap.api.HuvleSDK
 import com.byappsoft.sap.browser.Sap_BrowserActivity
 import com.byappsoft.sap.browser.Sap_MainActivity
 import com.byappsoft.sap.launcher.Sap_act_main_launcher
 import com.byappsoft.sap.utils.Sap_Func
-import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -76,6 +72,7 @@ class MainActivity : AppCompatActivity() {
         txtPackageName.text = "Package : ${baseContext.packageName}"
     }
 
+    // 앱 실행 후 첫 번째로 표시되는 화면(Main Activity)의 onResume에서 초기화
     override fun onResume() {
         super.onResume()
         // Android 14+ 서비스 상태 갱신
@@ -86,16 +83,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun huvleView() {
-        lifecycleScope.launch {
-            HuvleSDK.initialize(
-                context = this@MainActivity,
-                agencyKey = "bynetwork",  // agent.huvle.com 에서 등록한 에이전트 키
-                config = HuvleConfig(
-                    enableNotification = false,  // 노티바 사용 여부
-                    enableUrlSearch = true      // URL 검색 사용 여부
-                )
-            )
-        }
+        Sap_act_main_launcher.initsapStart(
+            this,
+            "bynetwork",  // agent.huvle.com 에서 등록한 에이전트 키
+            true,   // 노티바 사용 여부
+            true,   // URL 검색 사용 여부
+            object : Sap_act_main_launcher.OnLauncher {
+                override fun onDialogOkClicked() { }
+                override fun onDialogCancelClicked() { }
+                override fun onInitSapStartapp() { }
+                override fun onUnknown() { }
+            }
+        )
     }
 
     // 권한 플로우 진입점 - 중복 실행 방지 후 오버레이 권한 확인

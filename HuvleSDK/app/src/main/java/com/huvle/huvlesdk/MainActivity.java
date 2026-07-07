@@ -95,24 +95,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void huvleView() {
-        Sap_Func.setNotiBarLockScreen(this, false);
-        Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true, new Sap_act_main_launcher.OnLauncher() {
-            @Override
-            public void onDialogOkClicked() {
-            }
-
-            @Override
-            public void onDialogCancelClicked() {
-            }
-
-            @Override
-            public void onInitSapStartapp() {
-            }
-
-            @Override
-            public void onUnknown() {
-            }
-        });
+        Sap_act_main_launcher.initsapStart(this, "bynetwork", true, true);
     }
 
     // 권한 플로우 진입점 - 중복 실행 방지 후 오버레이 권한 확인

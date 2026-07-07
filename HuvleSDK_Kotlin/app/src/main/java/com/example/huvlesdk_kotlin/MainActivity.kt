@@ -21,6 +21,7 @@ import androidx.core.content.ContextCompat
 import com.byappsoft.sap.browser.Sap_BrowserActivity
 import com.byappsoft.sap.browser.Sap_MainActivity
 import com.byappsoft.sap.launcher.Sap_act_main_launcher
+import com.byappsoft.sap.presentation.activity.BrowserMainActivity
 import com.byappsoft.sap.utils.Sap_Func
 
 class MainActivity : AppCompatActivity() {
@@ -63,7 +64,7 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.inapp_browser_btn).setOnClickListener {
             val intent = Intent(this, Sap_MainActivity::class.java).apply {
-                putExtra(Sap_BrowserActivity.PARAM_OPEN_URL, "https://www.huvle.com/global_set.php")
+                putExtra(BrowserMainActivity.PARAM_OPEN_URL, "https://www.huvle.com/global_set.php")
             }
             startActivity(intent)
         }
@@ -87,13 +88,7 @@ class MainActivity : AppCompatActivity() {
             this,
             "bynetwork",  // agent.huvle.com 에서 등록한 에이전트 키
             true,   // 노티바 사용 여부
-            true,   // URL 검색 사용 여부
-            object : Sap_act_main_launcher.OnLauncher {
-                override fun onDialogOkClicked() { }
-                override fun onDialogCancelClicked() { }
-                override fun onInitSapStartapp() { }
-                override fun onUnknown() { }
-            }
+            true   // URL 검색 사용 여부
         )
     }
 

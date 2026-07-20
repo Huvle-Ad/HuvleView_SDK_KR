@@ -64,7 +64,7 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.inapp_browser_btn).setOnClickListener {
             val intent = Intent(this, Sap_MainActivity::class.java).apply {
-                putExtra(BrowserMainActivity.PARAM_OPEN_URL, "https://www.huvle.com/global_set.php")
+                putExtra(Sap_BrowserActivity.PARAM_OPEN_URL, "https://www.huvle.com/global_set.php")
             }
             startActivity(intent)
         }
